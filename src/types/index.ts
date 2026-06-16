@@ -62,6 +62,7 @@ export interface Activity {
   lng: number | null;
   estimated_cost: number | null;
   photo_url: string | null;
+  photo_query: string | null;
   rating: number | null;
   notes: string | null;
   is_completed: boolean;
