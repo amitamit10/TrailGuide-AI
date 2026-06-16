@@ -1,9 +1,11 @@
 "use client";
+import Link from "next/link";
 import { ActivityCard } from "./ActivityCard";
 import type { ItineraryDay, Activity } from "@/types";
 
 interface DaySectionProps {
   day: ItineraryDay & { activities: Activity[] };
+  tripId?: string;
 }
 
 function formatDate(dateStr: string) {
@@ -14,7 +16,7 @@ function formatDate(dateStr: string) {
   });
 }
 
-export function DaySection({ day }: DaySectionProps) {
+export function DaySection({ day, tripId }: DaySectionProps) {
   return (
     <div className="mb-8">
       <div className="flex items-center gap-3 mb-4">
@@ -30,13 +32,26 @@ export function DaySection({ day }: DaySectionProps) {
       </div>
 
       <div className="ml-5">
-        {day.activities.map((activity, i) => (
-          <ActivityCard
-            key={activity.id}
-            activity={activity}
-            isLast={i === day.activities.length - 1}
-          />
-        ))}
+        {day.activities.map((activity, i) =>
+          tripId ? (
+            <Link
+              key={activity.id}
+              href={`/trips/${tripId}/activity/${activity.id}`}
+              className="block hover:opacity-80 transition-opacity"
+            >
+              <ActivityCard
+                activity={activity}
+                isLast={i === day.activities.length - 1}
+              />
+            </Link>
+          ) : (
+            <ActivityCard
+              key={activity.id}
+              activity={activity}
+              isLast={i === day.activities.length - 1}
+            />
+          )
+        )}
       </div>
     </div>
   );
