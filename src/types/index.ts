@@ -30,6 +30,9 @@ export interface Trip {
   start_date: string;
   end_date: string;
   travelers_count: number;
+  traveler_ages: number[] | null;
+  flights_booked: boolean;
+  hotels_booked: boolean;
   budget_total: number | null;
   budget_currency: string;
   travel_style: TravelStyle;
