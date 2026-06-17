@@ -386,6 +386,26 @@ Row-level security on all tables — users can only access their own data.
 ### Phase 11 — Documentation ✅
 - README, architecture.md, api-reference.md, env-vars.md, telegram-bot.md, .env.local.example
 
+### Phase 12 — Security Hardening (Planned)
+- Auth guards on `recommendations` and `trip-story` routes (missing in Phases 3-5)
+- Next.js middleware for session refresh + auth redirect
+- HTTP security headers (CSP, X-Frame-Options, X-Content-Type-Options)
+- Clean up image allowlist (remove unused Google Maps entry)
+
+### Phase 13 — Rate Limiting & Caching (Planned)
+- Upstash Redis sliding-window rate limit on all AI routes (10 req/min per user)
+- CDN cache headers on weather route (1 hour) and photo proxy (24 hours)
+
+### Phase 14 — PWA & Offline Mode (Planned)
+- Web app manifest — installable on Android and iOS home screen
+- Serwist service worker — pre-caches app shell, runtime-caches trip timeline
+- Offline fallback page with cached timeline access
+
+### Phase 15 — Trip Export & Calendar Integration (Planned)
+- iCal export (`/api/trips/[id]/export/ical`) — compatible with Google Calendar, Apple Calendar, Outlook
+- Google Calendar deep-link (no OAuth needed)
+- PDF itinerary download via `jsPDF` (client-side, multi-page)
+
 ---
 
 ## Key Technical Decisions
