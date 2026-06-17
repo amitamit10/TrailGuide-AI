@@ -26,6 +26,24 @@
 
 ---
 
+## Phase Groups
+
+Groups define the recommended execution order. Within a group, phases listed as "parallel" can run as simultaneous subagents.
+
+| Group | Name | Phases | Status | Execution order |
+|---|---|---|---|---|
+| A | Foundation | 1, 2, 3, 4, 5, 11 | ✅ Complete | Done |
+| B | Production Ship | 6, 12 | ⏳ Next | 12 first (security guards), then 6 (deploy) |
+| C | Current-Stack Hardening | 13, 14, 15 | 📋 Planned | 13, 14, 15 in parallel — all independent |
+| D | Architecture Transition | 16, 17, 18, 19 | 📋 Planned | 16 + 17 parallel → 18 → 19 |
+| E | Feature Expansion | 7, 8, 9, 10 | 📋 Planned | 7, 8, 9, 10 in parallel — after Group D |
+
+> **Why Group E comes after Group D:** Phases 7–10 add backend features (notifications, budget, packing, social). Building them before the architecture transition would mean writing them as Next.js API routes, then immediately migrating them to Go/Python in Phase 18. Build them in Go + Python from the start.
+
+> **Why Group B comes before Group C:** Phase 12 (security hardening) fixes missing auth guards on live routes — that must land before the app goes to production in Phase 6. Group C improvements (rate limiting, PWA, export) are useful but not blockers for shipping.
+
+---
+
 ## Changelog
 
 ### 2026-06-18 (continued)
