@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { DaySection } from "@/components/itinerary/DaySection";
+import { TimelineClient } from "@/components/itinerary/TimelineClient";
 import { EditBar } from "@/components/itinerary/EditBar";
 import type { ItineraryDay, Activity } from "@/types";
 import { buttonVariants } from "@/components/ui/button";
@@ -35,9 +35,7 @@ export default async function TimelinePage({
     .eq("trip_id", id)
     .order("day_number", { ascending: true });
 
-  const typedDays = (days ?? []) as Array<
-    ItineraryDay & { activities: Activity[] }
-  >;
+  const typedDays = (days ?? []) as Array<ItineraryDay & { activities: Activity[] }>;
 
   for (const day of typedDays) {
     day.activities = (day.activities ?? []).sort(
@@ -45,26 +43,20 @@ export default async function TimelinePage({
     );
   }
 
+  if (typedDays.length === 0) {
+    return (
+      <div className="flex flex-col min-h-[calc(100vh-112px)] items-center justify-center text-center px-4">
+        <p className="text-muted-foreground">No itinerary yet.</p>
+        <Link href="/trips/new" className={cn(buttonVariants(), "rounded-xl mt-4 inline-flex")}>
+          Plan Another Trip
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col min-h-[calc(100vh-112px)]">
-      <div className="flex-1 max-w-2xl mx-auto w-full px-4 py-6 pb-24">
-        {typedDays.map((day) => (
-          <DaySection key={day.id} day={day} tripId={id} />
-        ))}
-
-        {typedDays.length === 0 && (
-          <div className="text-center py-16 text-muted-foreground">
-            <p>No itinerary yet.</p>
-            <Link
-              href="/trips/new"
-              className={cn(buttonVariants(), "rounded-xl mt-4 inline-flex")}
-            >
-              Plan Another Trip
-            </Link>
-          </div>
-        )}
-      </div>
-
+      <TimelineClient tripId={id} days={typedDays} />
       <EditBar tripId={id} />
     </div>
   );

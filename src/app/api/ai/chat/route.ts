@@ -1,5 +1,6 @@
+export const maxDuration = 60;
 import { NextRequest, NextResponse } from "next/server";
-import { gemini } from "@/lib/gemini";
+import { gemini } from "@/lib/ai";
 import { createClient } from "@/lib/supabase/server";
 
 export async function POST(req: NextRequest) {
@@ -37,10 +38,13 @@ export async function POST(req: NextRequest) {
     );
     return NextResponse.json(result);
   } catch (err) {
+    const msg = err instanceof Error ? err.message : "";
+    if (msg.includes("429") || msg.includes("quota") || msg.includes("Too Many Requests")) {
+      const retryMatch = msg.match(/Please retry in ([\d.]+)s/);
+      const retryAfter = retryMatch ? Math.ceil(parseFloat(retryMatch[1])) : 15;
+      return NextResponse.json({ error: "rate_limited", retryAfter }, { status: 429 });
+    }
     console.error("Gemini chat error:", err);
-    return NextResponse.json(
-      { error: "AI service unavailable" },
-      { status: 503 }
-    );
+    return NextResponse.json({ error: "AI service unavailable" }, { status: 503 });
   }
 }

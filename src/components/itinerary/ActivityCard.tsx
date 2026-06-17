@@ -1,4 +1,5 @@
 "use client";
+import { useState } from "react";
 import {
   UtensilsCrossed,
   Landmark,
@@ -9,8 +10,40 @@ import {
   Clock,
   DollarSign,
   MapPin,
+  RefreshCw,
+  ExternalLink,
 } from "lucide-react";
 import type { Activity } from "@/types";
+import { PhotoLightbox } from "@/components/ui/PhotoLightbox";
+
+function ActivityPhoto({ query, title }: { query?: string | null; title: string }) {
+  const [failed, setFailed] = useState(false);
+  const [preview, setPreview] = useState(false);
+  if (!query || failed) return null;
+  const src = `/api/places/photo?query=${encodeURIComponent(query)}&w=400`;
+  return (
+    <>
+      <div
+        className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 bg-muted cursor-zoom-in"
+        onClick={(e) => { e.stopPropagation(); setPreview(true); }}
+      >
+        <img
+          src={src}
+          alt={title}
+          className="w-full h-full object-cover"
+          onError={() => setFailed(true)}
+        />
+      </div>
+      {preview && <PhotoLightbox src={src} alt={title} onClose={() => setPreview(false)} />}
+    </>
+  );
+}
+
+function mapsUrl(a: Activity): string {
+  if (a.lat && a.lng) return `https://www.google.com/maps/search/?api=1&query=${a.lat},${a.lng}`;
+  const q = encodeURIComponent([a.location_name, a.address].filter(Boolean).join(", "));
+  return `https://www.google.com/maps/search/?api=1&query=${q}`;
+}
 
 const CATEGORY_META = {
   food: { icon: UtensilsCrossed, color: "bg-orange-100 text-orange-600" },
@@ -24,9 +57,10 @@ const CATEGORY_META = {
 interface ActivityCardProps {
   activity: Activity;
   isLast?: boolean;
+  onReplace?: () => void;
 }
 
-export function ActivityCard({ activity, isLast }: ActivityCardProps) {
+export function ActivityCard({ activity, isLast, onReplace }: ActivityCardProps) {
   const meta = CATEGORY_META[activity.category] ?? CATEGORY_META.attraction;
   const Icon = meta.icon;
 
@@ -44,28 +78,50 @@ export function ActivityCard({ activity, isLast }: ActivityCardProps) {
       </div>
 
       <div className="flex-1 pb-6">
-        <div className="flex items-start justify-between gap-2 mb-1">
-          <h4 className="font-semibold text-sm leading-tight">{activity.title}</h4>
-          {activity.start_time && (
-            <span className="text-xs text-muted-foreground flex items-center gap-0.5 flex-shrink-0">
-              <Clock className="w-3 h-3" />
-              {activity.start_time}
-            </span>
-          )}
+        <div className="flex items-start gap-3 mb-1">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between gap-2">
+              <h4 className="font-semibold text-sm leading-tight">{activity.title}</h4>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {activity.start_time && (
+                  <span className="text-xs text-muted-foreground flex items-center gap-0.5">
+                    <Clock className="w-3 h-3" />
+                    {activity.start_time}
+                  </span>
+                )}
+                {onReplace && (
+                  <button
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); onReplace(); }}
+                    className="w-6 h-6 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+                    title="Replace this activity"
+                  >
+                    <RefreshCw className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
+            </div>
+            {activity.description && (
+              <p className="text-xs text-muted-foreground leading-relaxed mt-1 mb-2">
+                {activity.description}
+              </p>
+            )}
+          </div>
+          <ActivityPhoto query={activity.photo_query} title={activity.title} />
         </div>
-
-        {activity.description && (
-          <p className="text-xs text-muted-foreground leading-relaxed mb-2">
-            {activity.description}
-          </p>
-        )}
 
         <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
           {activity.location_name && (
-            <span className="flex items-center gap-1">
+            <a
+              href={mapsUrl(activity)}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="flex items-center gap-1 hover:text-primary transition-colors"
+            >
               <MapPin className="w-3 h-3" />
               {activity.location_name}
-            </span>
+              <ExternalLink className="w-2.5 h-2.5 opacity-60" />
+            </a>
           )}
           {activity.estimated_cost != null && activity.estimated_cost > 0 && (
             <span className="flex items-center gap-1">

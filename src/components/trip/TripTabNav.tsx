@@ -1,14 +1,17 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, List, Calendar, Map, Upload } from "lucide-react";
+import { LayoutDashboard, List, Calendar, Map, Upload, Compass, Sparkles, ScrollText } from "lucide-react";
 
 const TABS = [
   { label: "Dashboard", href: "dashboard", icon: LayoutDashboard },
-  { label: "Timeline", href: "timeline", icon: List },
-  { label: "Calendar", href: "calendar", icon: Calendar },
-  { label: "Map", href: "map", icon: Map },
-  { label: "Import", href: "import", icon: Upload },
+  { label: "Timeline",  href: "timeline",  icon: List            },
+  { label: "Companion", href: "companion", icon: Sparkles        },
+  { label: "Discover",  href: "discover",  icon: Compass         },
+  { label: "Summary",   href: "summary",   icon: ScrollText      },
+  { label: "Calendar",  href: "calendar",  icon: Calendar        },
+  { label: "Map",       href: "map",       icon: Map             },
+  { label: "Import",    href: "import",    icon: Upload          },
 ];
 
 export function TripTabNav({ tripId }: { tripId: string }) {

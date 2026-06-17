@@ -1,5 +1,6 @@
+export const maxDuration = 60;
 import { NextRequest, NextResponse } from "next/server";
-import { gemini } from "@/lib/gemini";
+import { gemini } from "@/lib/ai";
 import { createClient } from "@/lib/supabase/server";
 import type { GeneratedItinerary, GeneratedDay, GeneratedActivity, ItineraryDay, Activity } from "@/types";
 
