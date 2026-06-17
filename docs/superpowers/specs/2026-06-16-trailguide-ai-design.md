@@ -406,6 +406,32 @@ Row-level security on all tables — users can only access their own data.
 - Google Calendar deep-link (no OAuth needed)
 - PDF itinerary download via `jsPDF` (client-side, multi-page)
 
+### Phase 16 — Go Backend (Planned)
+- Standalone Go REST API (`backend/` directory): Gin router, pgx v5 for direct PostgreSQL, JWT validation middleware (Supabase HS256 tokens)
+- CRUD handlers: trips, days, activities, profiles
+- Telegram webhook handler in pure Go (no library) — replaces grammy
+- AI proxy: `GET/POST /api/v1/ai/*` forwarded to Python service with internal token
+- Replaces all Next.js data API routes
+
+### Phase 17 — Python AI Service (Planned)
+- Standalone FastAPI service (`ai-service/` directory): all AI operations via Groq Python SDK
+- Routes: generate-itinerary, chat (streaming), recommendations (Tavily+Groq), replace-activity, trip-story, edit-itinerary, document import, photo proxy (Wikipedia+Unsplash), weather proxy (Open-Meteo)
+- Internal token auth (`X-Internal-Token` header) — not exposed to the public internet
+- No database access — pure AI/HTTP service
+
+### Phase 18 — Frontend Migration (Planned)
+- Strip Next.js to pure frontend: remove all `src/app/api/` routes
+- Create `src/lib/api.ts` typed API client — injects Supabase JWT as Bearer token on all Go backend calls
+- Update all components to fetch from Go backend (`NEXT_PUBLIC_API_URL`) instead of Supabase directly
+- Keep only Supabase Auth (login/signup/callback) in Next.js
+
+### Phase 19 — Infrastructure & Deployment (Planned)
+- Multi-stage Dockerfiles for Go backend (alpine, <25 MB) and Python AI service (slim)
+- `docker-compose.yml` for local dev: `docker compose up backend ai-service`
+- `Dockerfile.web` for Next.js standalone build
+- GitHub Actions CI: 4 jobs (Go build+vet, Python imports, Next.js type-check+build, Docker builds)
+- Production: Railway for Go + Python, Vercel for Next.js (unchanged)
+
 ---
 
 ## Key Technical Decisions

@@ -19,10 +19,22 @@
 | 13 | Rate Limiting & Caching | 📋 Planned |
 | 14 | PWA & Offline Mode | 📋 Planned |
 | 15 | Trip Export & Calendar | 📋 Planned |
+| 16 | Go Backend | 📋 Planned |
+| 17 | Python AI Service | 📋 Planned |
+| 18 | Frontend Migration | 📋 Planned |
+| 19 | Infrastructure & Deploy | 📋 Planned |
 
 ---
 
 ## Changelog
+
+### 2026-06-18 (continued)
+
+**Phases 16-19 — Architecture Transition Plans**
+- Wrote `docs/superpowers/plans/2026-06-18-phase16-go-backend.md` — Go (Gin) backend: JWT auth middleware, pgx CRUD for trips/days/activities/profiles, Telegram webhook handler (no library dependency), AI proxy to Python service
+- Wrote `docs/superpowers/plans/2026-06-18-phase17-python-ai.md` — Python (FastAPI) AI service: all 8 AI routes (generate, chat, recommendations, replace, story, edit, import, photos/weather), internal token auth, Groq SDK
+- Wrote `docs/superpowers/plans/2026-06-18-phase18-frontend-migration.md` — Next.js migration to pure frontend: `src/lib/api.ts` typed API client, replace all Supabase direct calls and Next.js API routes with Go/Python backends
+- Wrote `docs/superpowers/plans/2026-06-18-phase19-infrastructure.md` — Docker Compose, multi-stage Dockerfiles (Go + Python + Next.js standalone), GitHub Actions CI (4 jobs), Railway production deployment guide
 
 ### 2026-06-18
 
