@@ -23,6 +23,12 @@
 | 17 | Python AI Service | 📋 Planned |
 | 18 | Frontend Migration | 📋 Planned |
 | 19 | Infrastructure & Deploy | 📋 Planned |
+| 20 | Real-time Collaboration | 📋 Planned |
+| 21 | Photo Journal | 📋 Planned |
+| 22 | Flight Tracker | 📋 Planned |
+| 23 | Language & Culture Toolkit | 📋 Planned |
+| 24 | AI Destination Discovery | 📋 Planned |
+| 25 | Monitoring & Admin | 📋 Planned |
 
 ---
 
@@ -37,8 +43,12 @@ Groups define the recommended execution order. Within a group, phases listed as 
 | C | Current-Stack Hardening | 13, 14, 15 | 📋 Planned | 13, 14, 15 in parallel — all independent |
 | D | Architecture Transition | 16, 17, 18, 19 | 📋 Planned | 16 + 17 parallel → 18 → 19 |
 | E | Feature Expansion | 7, 8, 9, 10 | 📋 Planned | 7, 8, 9, 10 in parallel — after Group D |
+| F | Trip Enrichment | 20, 21, 22, 23 | 📋 Planned | 20, 21, 22, 23 in parallel — after Group D |
+| G | Discovery & Ops | 24, 25 | 📋 Planned | 24 + 25 in parallel — after Group D |
 
 > **Why Group E comes after Group D:** Phases 7–10 add backend features (notifications, budget, packing, social). Building them before the architecture transition would mean writing them as Next.js API routes, then immediately migrating them to Go/Python in Phase 18. Build them in Go + Python from the start.
+
+> **Why Groups F and G come after Group D:** Phases 20–25 add features that touch the Go backend (member tables, photo metadata, flight alerts, culture cache, admin events). Building them before the architecture transition would mean writing new Next.js API routes that immediately get deleted in Phase 18.
 
 > **Why Group B comes before Group C:** Phase 12 (security hardening) fixes missing auth guards on live routes — that must land before the app goes to production in Phase 6. Group C improvements (rate limiting, PWA, export) are useful but not blockers for shipping.
 
@@ -47,6 +57,14 @@ Groups define the recommended execution order. Within a group, phases listed as 
 ## Changelog
 
 ### 2026-06-18 (continued)
+
+**Phases 20-25 — Trip Enrichment, Discovery & Ops Plans**
+- Wrote `docs/superpowers/plans/2026-06-18-phase20-collaboration.md` — real-time trip collaboration: `trip_members` table, role-based access (owner/editor/viewer), invite by email, Supabase Realtime live sync, collaborator avatars
+- Wrote `docs/superpowers/plans/2026-06-18-phase21-photo-journal.md` — photo journal: Supabase Storage direct upload, activity-level photo attachment, AI captions (Groq), timeline thumbnails, summary mosaic
+- Wrote `docs/superpowers/plans/2026-06-18-phase22-flight-tracker.md` — flight tracker: AviationStack real-time status, Go background polling worker (30-min interval), Telegram delay/gate notifications, dashboard flight card
+- Wrote `docs/superpowers/plans/2026-06-18-phase23-culture-toolkit.md` — culture toolkit: AI culture pack (phrases, customs, emergency numbers, visa info), 7-day DB cache, ExchangeRate-API currency converter, new Local Info trip tab
+- Wrote `docs/superpowers/plans/2026-06-18-phase24-destination-discovery.md` — AI destination discovery: `/explore` screen, Groq + Tavily inspiration, destination cards with hero photos, "Plan this trip" pre-fills wizard
+- Wrote `docs/superpowers/plans/2026-06-18-phase25-monitoring.md` — monitoring & admin: async request logging to `api_events`, admin dashboard (stats, hourly chart, top endpoints), combined health endpoint, role-gated `/admin` page
 
 **Phases 16-19 — Architecture Transition Plans**
 - Wrote `docs/superpowers/plans/2026-06-18-phase16-go-backend.md` — Go (Gin) backend: JWT auth middleware, pgx CRUD for trips/days/activities/profiles, Telegram webhook handler (no library dependency), AI proxy to Python service
