@@ -108,6 +108,9 @@ export interface TripConfig {
   interests: string[];
   flights_booked: boolean;
   hotels_booked: boolean;
+  transport_mode?: "walking" | "transit" | "car" | "bicycle" | "mix";
+  max_walk_minutes?: number;
+  break_minutes?: number;
 }
 
 export interface GeneratedActivity {

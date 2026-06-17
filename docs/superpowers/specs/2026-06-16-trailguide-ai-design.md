@@ -343,7 +343,8 @@ Row-level security on all tables — users can only access their own data.
 - Discovery screen
 - Search & filters
 - AI recommendations
-- Places API integration
+- Google Places API integration — fetch activity photos using `photo_query` field, display in activity cards and detail sheets
+- Google Maps deep-link on every activity — "Open in Google Maps" button linking to `https://www.google.com/maps/search/?api=1&query=<location_name>` (or lat/lng if available)
 
 ### Phase 4 — Live Trip (Week 4)
 - Live companion mode

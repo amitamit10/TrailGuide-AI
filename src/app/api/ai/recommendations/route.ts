@@ -1,0 +1,88 @@
+export const maxDuration = 60;
+import { NextRequest, NextResponse } from "next/server";
+import Groq from "groq-sdk";
+
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+
+export interface Recommendation {
+  title: string;
+  description: string;
+  reason: string;
+  category: "food" | "attraction" | "transport" | "hotel" | "free";
+  location_name: string;
+  address: string;
+  lat: number;
+  lng: number;
+  estimated_cost: number;
+  photo_query: string;
+  duration_minutes: number;
+}
+
+const SYSTEM = `You are a travel discovery AI. Return a JSON object with a "recommendations" array of places.
+
+Each item must match this structure exactly:
+{
+  "title": "Place name",
+  "description": "2-3 sentences about the place.",
+  "reason": "1 sentence: why this fits the traveler's interests.",
+  "category": "attraction",
+  "location_name": "Neighbourhood or landmark name",
+  "address": "Full street address",
+  "lat": 35.6762,
+  "lng": 139.6503,
+  "estimated_cost": 15,
+  "photo_query": "descriptive search query for a photo",
+  "duration_minutes": 90
+}
+
+category must be one of: food, attraction, free
+Use accurate real-world coordinates. estimated_cost is per person (0 for free).
+Return exactly the number of recommendations requested. No markdown, only JSON.`;
+
+// POST /api/ai/recommendations
+// Body: { destination, interests, travelStyle, existingTitles, category?, count? }
+export async function POST(req: NextRequest) {
+  const {
+    destination,
+    interests = [],
+    travelStyle = "balanced",
+    existingTitles = [],
+    category,
+    count = 8,
+  } = await req.json();
+
+  if (!destination) return NextResponse.json({ error: "destination required" }, { status: 400 });
+
+  const categoryLine = category ? `Focus only on category: ${category}.` : "Mix categories: food, attraction, and free activities.";
+  const excludeLine = existingTitles.length > 0
+    ? `Do NOT suggest these already-planned places: ${existingTitles.slice(0, 20).join(", ")}.`
+    : "";
+
+  const prompt = `Destination: ${destination}
+Traveler interests: ${Array.isArray(interests) ? interests.join(", ") : "general"}
+Travel style: ${travelStyle}
+${categoryLine}
+${excludeLine}
+
+Generate ${count} discovery recommendations for this destination. Prioritize hidden gems, local favourites, and highly-rated spots that match the interests. Include a mix of well-known and off-the-beaten-path options.`;
+
+  try {
+    const completion = await groq.chat.completions.create({
+      model: "llama-3.3-70b-versatile",
+      messages: [
+        { role: "system", content: SYSTEM },
+        { role: "user", content: prompt },
+      ],
+      temperature: 0.8,
+      max_tokens: 3000,
+      response_format: { type: "json_object" },
+    });
+
+    const text = completion.choices[0].message.content?.trim() ?? '{"recommendations":[]}';
+    const parsed = JSON.parse(text);
+    return NextResponse.json({ recommendations: parsed.recommendations ?? [] });
+  } catch (err) {
+    console.error("recommendations error:", err);
+    return NextResponse.json({ error: "AI error" }, { status: 503 });
+  }
+}

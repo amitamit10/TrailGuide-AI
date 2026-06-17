@@ -1,8 +1,7 @@
+export const maxDuration = 60;
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+import { gemini } from "@/lib/ai";
 
 const EXTRACTION_PROMPT = `Extract all travel booking information from this document. Return ONLY valid JSON with this structure:
 {
@@ -53,45 +52,11 @@ export async function POST(req: NextRequest) {
       const { PDFParse } = await import("pdf-parse");
       const parser = new PDFParse({ data: buffer });
       const result = await parser.getText();
-      const text = result.text;
-
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
-      const geminiResult = await model.generateContent({
-        contents: [
-          {
-            role: "user",
-            parts: [
-              { text: EXTRACTION_PROMPT },
-              { text: `\n\nDocument text:\n${text.slice(0, 8000)}` },
-            ],
-          },
-        ],
-        generationConfig: { responseMimeType: "application/json" },
-      });
-
-      const raw = geminiResult.response.text().trim();
-      extractedJson = JSON.parse(
-        raw.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "").trim()
-      );
-    } else if (
-      mimeType.startsWith("image/")
-    ) {
+      const raw = await gemini.analyzeText(result.text.slice(0, 8000), EXTRACTION_PROMPT);
+      extractedJson = JSON.parse(raw);
+    } else if (mimeType.startsWith("image/")) {
       const base64 = buffer.toString("base64");
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
-      const result = await model.generateContent({
-        contents: [
-          {
-            role: "user",
-            parts: [
-              { text: EXTRACTION_PROMPT },
-              { inlineData: { mimeType, data: base64 } },
-            ],
-          },
-        ],
-        generationConfig: { responseMimeType: "application/json" },
-      });
-
-      const raw = result.response.text().trim();
+      const raw = await gemini.analyzeImage(base64, mimeType, EXTRACTION_PROMPT);
       extractedJson = JSON.parse(
         raw.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "").trim()
       );
