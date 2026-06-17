@@ -15,6 +15,10 @@
 | 9 | Packing List | 📋 Planned |
 | 10 | Social | 📋 Planned |
 | 11 | Documentation | ✅ Done |
+| 12 | Security Hardening | 📋 Planned |
+| 13 | Rate Limiting & Caching | 📋 Planned |
+| 14 | PWA & Offline Mode | 📋 Planned |
+| 15 | Trip Export & Calendar | 📋 Planned |
 
 ---
 
