@@ -11,15 +11,19 @@ Tagline: **Your Personal AI Travel Planner & Trip Companion**
 
 ## Tech Stack
 
+> **Note (updated 2026-06-17):** Several choices changed during implementation. Actual stack is listed below.
+
 | Layer | Choice | Reason |
 |---|---|---|
-| Framework | Next.js 14 (App Router) + TypeScript | Full-stack in one repo, Vercel deploy |
-| Styling | Tailwind CSS + shadcn/ui | Speed + consistency |
-| Database | Supabase (PostgreSQL) | Auth + storage + real-time included |
-| AI | Google Gemini 1.5 Pro | User preference |
-| Maps | Google Maps JS API + Places + Directions | Pairs with Gemini, best coverage |
+| Framework | Next.js 16.2.9 (App Router, Turbopack) + TypeScript | Full-stack in one repo, Vercel deploy |
+| Styling | Tailwind CSS v4 (CSS-first config) | Speed + consistency; shadcn/ui not used |
+| Database | Supabase (PostgreSQL) | Auth + storage + RLS included |
+| AI | Groq — llama-3.3-70b-versatile / llama-3.1-8b-instant | Free tier, fast, no Gemini billing needed |
+| Search | Tavily API | Web search for AI recommendations |
+| Photos | Wikipedia API (free) + Unsplash (fallback) | Google Places requires billing |
+| Maps | Leaflet + OpenStreetMap (interactive); Google Maps deep-links for navigation | No API key needed for OSM |
 | Notifications | Telegram Bot via grammy (webhook on `/api/telegram/webhook`) | User requirement |
-| PDF parsing | pdf-parse + Gemini vision for screenshots | Document import |
+| Document import | Groq text parsing | PDF text sent as prompt; no separate PDF library |
 | Weather | Open-Meteo API (free, no key) | Companion + dashboard |
 | Deployment | Vercel + Supabase | Zero-ops |
 
@@ -174,37 +178,43 @@ Avoid: corporate SaaS blue, dense dashboards, small text, icon overload.
 
 ---
 
-## AI Integration (Gemini 1.5 Pro)
+## AI Integration (Groq)
 
-### GeminiService — 4 modes
+> **Note (updated 2026-06-17):** Gemini was replaced by Groq during Phase 1. `GeminiService` class name was kept in `src/lib/ai.ts` as a historical artefact. All AI now runs through Groq.
+
+### GeminiService — implemented modes
 
 **1. Planning Chat** (`/api/ai/chat`)
 - Multi-turn conversation, system prompt = "You are a professional travel agent..."
-- Maintains conversation history in Supabase (`chat_messages` table)
-- When all required fields collected → returns structured `TripConfig` JSON
-- Triggers itinerary generation
+- Conversation history in component state (not persisted to DB)
+- Quick-reply chips suggested by the model
 
 **2. Itinerary Generation** (`/api/ai/generate-itinerary`)
-- Input: full `TripConfig` + any imported document data
+- Input: full trip config from wizard
+- Model: `llama-3.3-70b-versatile`, `max_tokens: 8192`
 - Output: structured JSON array of days → activities
-- Each activity includes: title, description, time, duration, location, lat/lng, category, estimated_cost, photo_query (for Google Places image lookup)
 - Stored in DB, never re-generated on page load
 
 **3. Itinerary Editing** (`/api/ai/edit-itinerary`)
 - Input: current itinerary JSON + natural language edit command
 - Output: modified itinerary JSON
-- Diff applied with animation in the UI
 
-**4. Live Companion** (`/api/ai/companion`)
-- Called every 15 minutes during active trip (via client-side polling)
-- Input: current time, GPS coordinates, next activity, weather API data
-- Output: 0-3 nudge objects `{type, message, action?}`
-- Nudges shown in UI + sent via Telegram
+**4. Activity Replacement** (`/api/ai/replace-activity`)
+- Model: `llama-3.1-8b-instant` (fast)
+- Returns 3 alternative activity objects
 
-### Document Import (Gemini Vision)
-- PDF text extracted via `pdf-parse`, images sent directly to Gemini vision
-- Prompt: "Extract all travel booking information from this document. Return JSON with fields: type, flight_number, departure_airport, arrival_airport, departure_time, arrival_time, airline, hotel_name, hotel_address, check_in, check_out, confirmation_number"
-- Results stored in `documents.extracted_json`
+**5. Trip Story** (`/api/ai/trip-story`)
+- Model: `llama-3.3-70b-versatile`, `max_tokens: 400`, `temperature: 0.85`
+- Returns 2-3 paragraph travel narrative for the Summary page
+
+**6. Recommendations** (`/api/ai/recommendations`)
+- Uses Tavily web search + Groq synthesis
+- Powers the Discover tab
+
+### Document Import
+- User pastes text content of booking confirmation
+- Groq extracts structured fields (flight number, times, hotel name, etc.)
+- Results pre-fill trip info fields
 
 ---
 
@@ -326,45 +336,65 @@ Row-level security on all tables — users can only access their own data.
 
 ## Build Phases
 
-### Phase 1 — Foundation (Week 1)
+> **Note (updated 2026-06-17):** Phases 1-5 are complete. Phases 6-11 were added.
+
+### Phase 1 — Foundation ✅
 - Next.js project setup, Supabase schema, auth
-- Welcome screen + auth flow
-- AI Chat + trip creation
+- Welcome screen + auth flow (email + Google OAuth)
+- AI Chat + trip creation wizard (8 steps)
 - Basic itinerary generation + timeline view
-- Git commits after each
 
-### Phase 2 — Core Views (Week 2)
-- Calendar view + map view
+### Phase 2 — Core Views ✅
+- Calendar view + map view (Leaflet/OSM)
 - Trip dashboard
-- Document import
-- Attraction + hotel detail pages
+- Document import (Groq text parsing)
 
-### Phase 3 — Discovery (Week 3)
-- Discovery screen
-- Search & filters
-- AI recommendations
-- Google Places API integration — fetch activity photos using `photo_query` field, display in activity cards and detail sheets
-- Google Maps deep-link on every activity — "Open in Google Maps" button linking to `https://www.google.com/maps/search/?api=1&query=<location_name>` (or lat/lng if available)
+### Phase 3 — Discovery ✅
+- AI recommendations (Tavily + Groq)
+- Wikipedia + Unsplash photos
+- Activity detail sheets, replace activity
 
-### Phase 4 — Live Trip (Week 4)
-- Live companion mode
-- Navigation screen
-- Telegram bot + notifications
-- Companion polling + nudges
+### Phase 4 — Live Trip ✅
+- Companion mode (weather, countdown, AI nudges)
+- Navigation (Google Maps deep-link)
+- Telegram bot + account linking
 
-### Phase 5 — Polish (Week 5)
-- Trip summary screen
-- Animations + transitions
-- Mobile responsiveness pass
-- Performance + error handling
+### Phase 5 — Summary ✅
+- Trip summary screen (stats + AI story + share + PNG export)
+- Photo lightbox
+- Animations + `animate-fade-up`, `animate-sheet-in`
+
+### Phase 6 — Deploy 🚀
+- Vercel production deploy
+- Supabase production project
+- Telegram webhook registration
+
+### Phase 7 — Notifications (Planned)
+- Resend email digests
+- Vercel Cron daily briefings
+- Activity check-off sync
+
+### Phase 8 — Budget Tracker (Planned)
+- `expenses` table, CRUD API, CSV export
+
+### Phase 9 — Packing List (Planned)
+- AI packing list generator, Tavily visa check
+
+### Phase 10 — Social (Planned)
+- Public explore page, clone-a-trip, photo mosaic
+
+### Phase 11 — Documentation ✅
+- README, architecture.md, api-reference.md, env-vars.md, telegram-bot.md, .env.local.example
 
 ---
 
 ## Key Technical Decisions
 
-1. **All AI calls server-side only** — Gemini API key never exposed to client. All AI routes are Next.js API routes.
+> **Note (updated 2026-06-17):** Decisions #1 and #3 changed during implementation.
+
+1. **All AI calls server-side only** — Groq API key never exposed to client. All AI routes are Next.js API routes.
 2. **Itinerary stored as structured data** — not markdown. Enables editing, filtering, map rendering.
-3. **Google Places API for photos** — activities get a `photo_query` field, photos fetched client-side from Places to avoid storing images.
-4. **Telegram webhook not polling** — grammy webhook mode, no long-polling. Simpler on Vercel.
-5. **RLS everywhere** — Supabase row-level security on all tables from day one.
-6. **Optimistic UI** — itinerary edits show immediately, Gemini response patches in when ready.
+3. **Wikipedia API for photos (not Google Places)** — Google Places requires billing. Wikipedia API is free and returns real place photos. Unsplash is the fallback. The photo proxy returns image bytes (not a redirect) so html2canvas can capture them without CORS errors.
+4. **Telegram webhook not polling** — grammy webhook mode in production. Local dev uses `scripts/telegram-poll.mjs` (long-poll → forward to localhost). Simpler on Vercel.
+5. **RLS everywhere** — Supabase row-level security on all tables from day one. Two client patterns: `createClient()` (respects RLS, for authenticated routes) and `createServiceClient()` (bypasses RLS, for Telegram webhook + public share page).
+6. **Leaflet + OSM for maps, Google Maps deep-links for navigation** — Leaflet/OpenStreetMap requires no API key. Navigation delegates to Google Maps via `window.location.href` deep-link.
