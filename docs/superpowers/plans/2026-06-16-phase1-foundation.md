@@ -4,9 +4,11 @@
 
 **Goal:** Build a working end-to-end flow: sign up → AI conversation → itinerary generated → timeline view. Users can create a trip using natural language and see a day-by-day schedule.
 
-**Architecture:** Next.js 14 App Router as full-stack (UI + API routes). Supabase for auth, PostgreSQL, and storage. Google Gemini 1.5 Pro powers all AI features through server-side API routes only — the API key never reaches the browser. shadcn/ui + Tailwind for the premium design system from the mockups.
+**Architecture:** Next.js 16.2.9 App Router as full-stack (UI + API routes). Supabase for auth, PostgreSQL, and storage. Groq (llama-3.3-70b-versatile) powers all AI features through server-side API routes only — the API key never reaches the browser. Tailwind CSS v4 (CSS-first) for styling; shadcn/ui was not used in the final implementation.
 
-**Tech Stack:** Next.js 14, TypeScript, Tailwind CSS, shadcn/ui, Supabase (`@supabase/ssr`), Google Gemini (`@google/generative-ai`), uuid
+**Tech Stack:** Next.js 16.2.9 (Turbopack), TypeScript, Tailwind CSS v4, Supabase (`@supabase/ssr` v0.12.0), Groq SDK, uuid
+
+> **Note (updated 2026-06-17):** This plan was written before the tech stack was finalised. Actual implementation used Next.js 16.2.9 and Groq instead of Next.js 14 and Google Gemini. Phase 1 is complete.
 
 **Spec:** `docs/superpowers/specs/2026-06-16-trailguide-ai-design.md`
 
