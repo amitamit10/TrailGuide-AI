@@ -1,6 +1,7 @@
 export const maxDuration = 60;
 import { NextRequest, NextResponse } from "next/server";
 import Groq from "groq-sdk";
+import { createClient } from "@/lib/supabase/server";
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
@@ -42,6 +43,12 @@ Return exactly the number of recommendations requested. No markdown, only JSON.`
 // POST /api/ai/recommendations
 // Body: { destination, interests, travelStyle, existingTitles, category?, count? }
 export async function POST(req: NextRequest) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const {
     destination,
     interests = [],
