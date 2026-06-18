@@ -15,7 +15,7 @@
 | 9 | Packing List | 📋 Planned |
 | 10 | Social | 📋 Planned |
 | 11 | Documentation | ✅ Done |
-| 12 | Security Hardening | 📋 Planned |
+| 12 | Security Hardening | ✅ Done |
 | 13 | Rate Limiting & Caching | 📋 Planned |
 | 14 | PWA & Offline Mode | 📋 Planned |
 | 15 | Trip Export & Calendar | 📋 Planned |
@@ -117,6 +117,16 @@ Groups define the recommended execution order. Within a group, phases listed as 
 > **Why Group J (Mobile) starts after Group I:** The mobile app consumes the same Go/Python API as the web frontend. All API endpoints must exist and be tested before building the mobile client.
 
 > **Why Group B comes before Group C:** Phase 12 (security hardening) fixes missing auth guards on live routes — that must land before the app goes to production in Phase 6. Group C improvements (rate limiting, PWA, export) are useful but not blockers for shipping.
+
+---
+
+## Known Accepted Risks
+
+| Risk | Severity | Reason accepted |
+|---|---|---|
+| PostCSS XSS in CSS output (`GHSA-qx2v-qp2m-jg93`) | Moderate | Build-time only — not a runtime attack surface. Fix would downgrade Next.js to 9.3.3 (breaking). Monitor for a non-breaking fix. |
+| No per-route rate limiting on AI endpoints | Low | Vercel DDoS protection + auth guard prevent anonymous abuse. Per-IP rate limiting is Phase 13+. |
+| CSP `unsafe-eval` in script-src | Low | Required by Next.js dev mode. In production (Vercel), Next.js compiles ahead of time — consider tightening post-deploy. |
 
 ---
 
