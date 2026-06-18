@@ -328,11 +328,6 @@
   https://api.telegram.org/bot<TELEGRAM_BOT_TOKEN>/setWebhook?url=<PROD_URL>/api/telegram/webhook
   ```
 
-  Example:
-  ```
-  https://api.telegram.org/bot8938965895:AAF30-dOzgIFBvLKUjADLOUxRYhoQe9PXTQ/setWebhook?url=https://trailguide-ai.vercel.app/api/telegram/webhook
-  ```
-
   Expected response:
   ```json
   {"ok":true,"result":true,"description":"Webhook was set"}
