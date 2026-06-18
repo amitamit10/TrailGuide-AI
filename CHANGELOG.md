@@ -9,7 +9,7 @@
 | 3 | Discovery | ✅ Done |
 | 4 | Live Trip | ✅ Done |
 | 5 | Trip Summary | ✅ Done |
-| 6 | Deploy | ⏳ Next |
+| 6 | Deploy | ✅ Done |
 | 7 | Notifications | 📋 Planned |
 | 8 | Budget Tracker | 📋 Planned |
 | 9 | Packing List | 📋 Planned |
