@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import Groq from "groq-sdk";
 import type { GeneratedActivity } from "@/types";
+import { createClient } from "@/lib/supabase/server";
+import { aiRatelimit } from "@/lib/ratelimit";
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
@@ -26,6 +28,19 @@ category must be one of: food, attraction, transport, hotel, flight, free
 Use real coordinates for the destination city.`;
 
 export async function POST(req: NextRequest) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const { success } = await aiRatelimit.limit(user.id);
+  if (!success) {
+    return NextResponse.json(
+      { error: "Too many requests. Please wait a moment before trying again." },
+      { status: 429, headers: { "Retry-After": "60" } }
+    );
+  }
+
   const { destination, travelStyle, interests, activity, neighbors, userRequest } = await req.json();
 
   const prompt = `Trip destination: ${destination}

@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { gemini } from "@/lib/ai";
 import { createClient } from "@/lib/supabase/server";
 import type { GeneratedItinerary, GeneratedDay, GeneratedActivity, ItineraryDay, Activity } from "@/types";
+import { aiRatelimit } from "@/lib/ratelimit";
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
@@ -12,6 +13,13 @@ export async function POST(req: NextRequest) {
 
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const { success } = await aiRatelimit.limit(user.id);
+  if (!success) {
+    return NextResponse.json(
+      { error: "Too many requests. Please wait a moment before trying again." },
+      { status: 429, headers: { "Retry-After": "60" } }
+    );
   }
 
   let body: { tripId: string; editCommand: string };
