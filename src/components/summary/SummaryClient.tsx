@@ -5,6 +5,7 @@ import {
   Share2, Download, Loader2, Sparkles, Clock,
 } from "lucide-react";
 import { PhotoLightbox } from "@/components/ui/PhotoLightbox";
+import { ExportMenu } from "@/components/trip/ExportMenu";
 
 interface Activity {
   id: string;
@@ -146,6 +147,21 @@ export function SummaryClient({ trip, activities, stats }: Props) {
           {downloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
           Save image
         </button>
+        <ExportMenu
+          tripId={trip.id}
+          tripTitle={trip.title}
+          days={Object.entries(byDay)
+            .sort(([a], [b]) => Number(a) - Number(b))
+            .map(([, acts]) => ({
+              date: acts[0].date,
+              activities: acts.map((a) => ({
+                title: a.title,
+                description: a.description ?? undefined,
+                address: a.location_name ?? undefined,
+                duration: a.duration_minutes ? `${a.duration_minutes} minutes` : undefined,
+              })),
+            }))}
+        />
       </div>
 
       {/* Shareable card */}
