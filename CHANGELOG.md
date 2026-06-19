@@ -94,8 +94,8 @@ Groups define the recommended execution order. Within a group, phases listed as 
 | Group | Name | Phases | Status | Execution order |
 |---|---|---|---|---|
 | A | Foundation | 1, 2, 3, 4, 5, 11 | ✅ Complete | Done |
-| B | Production Ship | 6, 12 | ⏳ Next | 12 first (security guards), then 6 (deploy) |
-| C | Current-Stack Hardening | 13, 14, 15 | 📋 Planned | 13, 14, 15 in parallel — all independent |
+| B | Production Ship | 6, 12 | ✅ Complete | Done |
+| C | Current-Stack Hardening | 13, 14, 15 | ✅ Complete | Done |
 | D | Architecture Transition | 16, 17, 18, 19 | 📋 Planned | 16 + 17 parallel → 18 → 19 |
 | E | Feature Expansion | 7, 8, 9, 10 | 📋 Planned | 7, 8, 9, 10 in parallel — after Group D |
 | F | Trip Enrichment | 20, 21, 22, 23 | 📋 Planned | 20, 21, 22, 23 in parallel — after Group D |
