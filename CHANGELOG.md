@@ -16,9 +16,9 @@
 | 10 | Social | 📋 Planned |
 | 11 | Documentation | ✅ Done |
 | 12 | Security Hardening | ✅ Done |
-| 13 | Rate Limiting & Caching | 📋 Planned |
-| 14 | PWA & Offline Mode | 📋 Planned |
-| 15 | Trip Export & Calendar | 📋 Planned |
+| 13 | Rate Limiting & Caching | ✅ Done |
+| 14 | PWA & Offline Mode | ✅ Done |
+| 15 | Trip Export & Calendar | ✅ Done |
 | 16 | Go Backend | 📋 Planned |
 | 17 | Python AI Service | 📋 Planned |
 | 18 | Frontend Migration | 📋 Planned |
