@@ -2,6 +2,7 @@ export const maxDuration = 60;
 import { NextRequest, NextResponse } from "next/server";
 import { gemini } from "@/lib/ai";
 import { createClient } from "@/lib/supabase/server";
+import { aiRatelimit } from "@/lib/ratelimit";
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
@@ -11,6 +12,13 @@ export async function POST(req: NextRequest) {
 
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const { success } = await aiRatelimit.limit(user.id);
+  if (!success) {
+    return NextResponse.json(
+      { error: "Too many requests. Please wait a moment before trying again." },
+      { status: 429, headers: { "Retry-After": "60" } }
+    );
   }
 
   let body: { history: unknown; message: string };

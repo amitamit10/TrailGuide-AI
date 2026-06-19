@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { gemini } from "@/lib/ai";
+import { aiRatelimit } from "@/lib/ratelimit";
 
 export interface NudgeCard {
   type: "timing" | "discovery" | "weather" | "navigation";
@@ -47,6 +48,13 @@ export async function POST(req: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { success } = await aiRatelimit.limit(user.id);
+  if (!success) {
+    return NextResponse.json(
+      { error: "Too many requests. Please wait a moment before trying again." },
+      { status: 429, headers: { "Retry-After": "60" } }
+    );
+  }
 
   // Get trip
   const { data: trip } = await supabase

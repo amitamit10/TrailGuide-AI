@@ -14,11 +14,18 @@ export async function GET(req: NextRequest) {
     const res = await fetch(url, { next: { revalidate: 1800 } });
     const data = await res.json();
 
-    return NextResponse.json({
-      temperature: data.current?.temperature_2m ?? 0,
-      weather_code: data.current?.weather_code ?? 0,
-      wind_speed: data.current?.wind_speed_10m ?? 0,
-    });
+    return NextResponse.json(
+      {
+        temperature: data.current?.temperature_2m ?? 0,
+        weather_code: data.current?.weather_code ?? 0,
+        wind_speed: data.current?.wind_speed_10m ?? 0,
+      },
+      {
+        headers: {
+          "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=7200",
+        },
+      }
+    );
   } catch {
     return NextResponse.json({ error: "Weather unavailable" }, { status: 503 });
   }

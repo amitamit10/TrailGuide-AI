@@ -2,6 +2,7 @@ export const maxDuration = 60;
 import { NextRequest, NextResponse } from "next/server";
 import Groq from "groq-sdk";
 import { createClient } from "@/lib/supabase/server";
+import { aiRatelimit } from "@/lib/ratelimit";
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
@@ -47,6 +48,13 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const { success } = await aiRatelimit.limit(user.id);
+  if (!success) {
+    return NextResponse.json(
+      { error: "Too many requests. Please wait a moment before trying again." },
+      { status: 429, headers: { "Retry-After": "60" } }
+    );
   }
 
   const {

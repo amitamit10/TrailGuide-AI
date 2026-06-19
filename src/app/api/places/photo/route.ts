@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
     return new NextResponse(buffer, {
       headers: {
         "Content-Type": contentType,
-        "Cache-Control": "public, max-age=604800, stale-while-revalidate=2592000",
+        "Cache-Control": "public, s-maxage=86400, stale-while-revalidate=604800",
         "Access-Control-Allow-Origin": "*",
       },
     });
