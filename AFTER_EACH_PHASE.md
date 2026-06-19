@@ -14,13 +14,12 @@ You follow the **You** steps manually.
 - [ ] Update `CHANGELOG.md` — mark the group ✅ Complete if all phases in the group are done
 - [ ] Add a changelog entry under the current date with what was built
 - [ ] Commit with a clear message (`feat:`, `fix:`, `docs:` prefix)
-- [ ] Ask before pushing to GitHub (repo is public — confirm before every push)
-
-### You do these manually
-- [ ] **Push to GitHub** — after Claude asks for confirmation, approve the push:
+- [ ] Push to GitHub immediately — no confirmation needed:
   ```bash
   git push origin main
   ```
+
+### You do these manually
 - [ ] **Deploy to Vercel** — Vercel auto-deploys from GitHub. Check the deployment succeeded at:
   [vercel.com/amits-projects-79cd529f/trailguide-ai](https://vercel.com/amits-projects-79cd529f/trailguide-ai)
 - [ ] **Smoke test** — open [trailguide-ai-iota.vercel.app](https://trailguide-ai-iota.vercel.app) and verify the app still works after the deploy
