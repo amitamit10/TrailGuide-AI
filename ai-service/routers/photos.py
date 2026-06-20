@@ -1,9 +1,24 @@
 import os
-import httpx
-from fastapi import APIRouter, Query
-from fastapi.responses import Response
+from urllib.parse import urlsplit
 
-router = APIRouter(prefix="/places")
+import httpx
+from fastapi import APIRouter, Depends, Query
+from fastapi.responses import Response
+from middleware.auth import verify_internal_token
+
+router = APIRouter(prefix="/places", dependencies=[Depends(verify_internal_token)])
+
+_SAFE_HOSTS = {"upload.wikimedia.org", "images.unsplash.com"}
+_SAFE_TYPES = {"image/jpeg", "image/png", "image/webp"}
+
+
+def _is_safe_url(url: str) -> bool:
+    p = urlsplit(url)
+    if p.scheme != "https":
+        return False
+    host = p.netloc.lower()
+    return any(host == h or host.endswith("." + h) for h in _SAFE_HOSTS)
+
 
 @router.get("/photo")
 async def get_photo(query: str = Query(...)):
@@ -17,11 +32,14 @@ async def get_photo(query: str = Query(...)):
             pages = search_resp.json().get("query", {}).get("pages", {})
             page = next(iter(pages.values()), {})
             src = page.get("thumbnail", {}).get("source")
-            if src:
+            if src and _is_safe_url(src):
                 img = await client.get(src)
-                return Response(content=img.content,
-                    media_type=img.headers.get("content-type", "image/jpeg"),
+                ct = img.headers.get("content-type", "").split(";")[0].strip()
+                if ct not in _SAFE_TYPES:
+                    ct = "image/jpeg"
+                return Response(content=img.content, media_type=ct,
                     headers={"Access-Control-Allow-Origin": "*",
+                             "X-Content-Type-Options": "nosniff",
                              "Cache-Control": "public, s-maxage=86400, stale-while-revalidate=604800"})
         except Exception:
             pass
@@ -33,10 +51,13 @@ async def get_photo(query: str = Query(...)):
                     params={"query": query, "orientation": "landscape"},
                     headers={"Authorization": f"Client-ID {key}"})
                 if r.status_code == 200:
-                    img = await client.get(r.json()["urls"]["regular"])
-                    return Response(content=img.content, media_type="image/jpeg",
-                        headers={"Access-Control-Allow-Origin": "*",
-                                 "Cache-Control": "public, s-maxage=86400, stale-while-revalidate=604800"})
+                    img_url = r.json()["urls"]["regular"]
+                    if _is_safe_url(img_url):
+                        img = await client.get(img_url)
+                        return Response(content=img.content, media_type="image/jpeg",
+                            headers={"Access-Control-Allow-Origin": "*",
+                                     "X-Content-Type-Options": "nosniff",
+                                     "Cache-Control": "public, s-maxage=86400, stale-while-revalidate=604800"})
             except Exception:
                 pass
 
