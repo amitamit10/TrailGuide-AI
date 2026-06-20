@@ -4,6 +4,7 @@ import { gemini } from "@/lib/ai";
 import { createClient } from "@/lib/supabase/server";
 import type { TripConfig } from "@/types";
 import { aiRatelimit } from "@/lib/ratelimit";
+import { proxyToBackend } from "@/lib/backend-proxy";
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
@@ -36,11 +37,18 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // Try Go backend when configured
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session?.access_token) {
+    const proxied = await proxyToBackend("/ai/generate-itinerary", config, session.access_token);
+    if (proxied) return proxied;
+  }
+
   try {
     const itinerary = await gemini.generateItinerary(config);
     return NextResponse.json(itinerary);
   } catch (err) {
-    console.error("Gemini generate-itinerary error:", err);
+    console.error("generate-itinerary error:", err);
     return NextResponse.json(
       { error: "AI service unavailable" },
       { status: 503 }

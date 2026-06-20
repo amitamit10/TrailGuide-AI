@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Groq from "groq-sdk";
 import { createClient } from "@/lib/supabase/server";
 import { aiRatelimit } from "@/lib/ratelimit";
+import { proxyToBackend } from "@/lib/backend-proxy";
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
@@ -19,7 +20,15 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { destination, startDate, endDate, activities } = await req.json();
+  const body = await req.json();
+  const { destination, startDate, endDate, activities } = body;
+
+  // Try Go backend when configured
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session?.access_token) {
+    const proxied = await proxyToBackend("/ai/trip-story", body, session.access_token);
+    if (proxied) return proxied;
+  }
 
   const activityList = (activities as { title: string; description?: string; day: number }[])
     .map((a) => `Day ${a.day}: ${a.title}${a.description ? ` — ${a.description}` : ""}`)
