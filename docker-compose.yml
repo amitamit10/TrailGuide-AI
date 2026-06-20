@@ -1,0 +1,29 @@
+version: "3.9"
+
+services:
+  go-backend:
+    build: ./backend
+    ports:
+      - "8080:8080"
+    environment:
+      PORT: "8080"
+      DATABASE_URL: ${DATABASE_URL}
+      SUPABASE_JWT_SECRET: ${SUPABASE_JWT_SECRET}
+      AI_SERVICE_URL: http://python-ai:8081
+      INTERNAL_API_SECRET: ${INTERNAL_API_SECRET}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+    depends_on:
+      - python-ai
+    restart: unless-stopped
+
+  python-ai:
+    build: ./ai-service
+    ports:
+      - "8081:8081"
+    environment:
+      PORT: "8081"
+      GROQ_API_KEY: ${GROQ_API_KEY}
+      TAVILY_API_KEY: ${TAVILY_API_KEY}
+      UNSPLASH_ACCESS_KEY: ${UNSPLASH_ACCESS_KEY}
+      INTERNAL_API_SECRET: ${INTERNAL_API_SECRET}
+    restart: unless-stopped
