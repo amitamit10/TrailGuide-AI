@@ -19,10 +19,10 @@
 | 13 | Rate Limiting & Caching | ✅ Done |
 | 14 | PWA & Offline Mode | ✅ Done |
 | 15 | Trip Export & Calendar | ✅ Done |
-| 16 | Go Backend | 📋 Planned |
-| 17 | Python AI Service | 📋 Planned |
-| 18 | Frontend Migration | 📋 Planned |
-| 19 | Infrastructure & Deploy | 📋 Planned |
+| 16 | Go Backend | ✅ Done |
+| 17 | Python AI Service | ✅ Done |
+| 18 | Frontend Migration | ✅ Done |
+| 19 | Infrastructure & Deploy | ✅ Done |
 | 20 | Real-time Collaboration | 📋 Planned |
 | 21 | Photo Journal | 📋 Planned |
 | 22 | Flight Tracker | 📋 Planned |
@@ -96,7 +96,7 @@ Groups define the recommended execution order. Within a group, phases listed as 
 | A | Foundation | 1, 2, 3, 4, 5, 11 | ✅ Complete | Done |
 | B | Production Ship | 6, 12 | ✅ Complete | Done |
 | C | Current-Stack Hardening | 13, 14, 15 | ✅ Complete | Done |
-| D | Architecture Transition | 16, 17, 18, 19 | 📋 Planned | 16 + 17 parallel → 18 → 19 |
+| D | Architecture Transition | 16, 17, 18, 19 | ✅ Complete | Done |
 | E | Feature Expansion | 7, 8, 9, 10 | 📋 Planned | 7, 8, 9, 10 in parallel — after Group D |
 | F | Trip Enrichment | 20, 21, 22, 23 | 📋 Planned | 20, 21, 22, 23 in parallel — after Group D |
 | G | Discovery & Ops | 24, 25 | 📋 Planned | 24 + 25 in parallel — after Group D |
@@ -131,6 +131,43 @@ Groups define the recommended execution order. Within a group, phases listed as 
 ---
 
 ## Changelog
+
+### 2026-06-20
+
+**Group D — Architecture Transition ✅ Complete**
+
+**Phase 16 — Go Backend**
+- Created `backend/` directory with full Gin router, pgx/v5 DB connection, JWT auth middleware (validates Supabase HS256 tokens)
+- Trip CRUD handlers (`GET/POST/PUT/DELETE /api/v1/trips`) query Postgres directly
+- AI proxy handler forwards all `/api/v1/ai/*`, `/api/v1/documents/*`, `/api/v1/places/*`, `/api/v1/weather` to Python AI service with `X-Internal-Token`
+- `backend/config/config.go` — typed env config with fail-fast on missing required vars
+- `backend/.env.example`, `backend/.gitignore`, `backend/go.mod` (Go 1.22)
+
+**Phase 17 — Python FastAPI AI Service**
+- Created `ai-service/` with 10 routers: generate-itinerary, chat (streaming), recommendations, replace-activity, preview-replace, trip-story, edit-itinerary, documents/import, places/photo, weather
+- `middleware/auth.py` — `X-Internal-Token` verification with `hmac.compare_digest` (constant-time)
+- `photos.py` — SSRF protection: URL allowlist (wikimedia.org, unsplash.com), content-type allowlist, `X-Content-Type-Options: nosniff`
+- All routers protected by internal token auth (including photos and weather)
+- Virtualenv + pip install complete; `ai-service/.gitignore` excludes `.venv/`
+
+**Phase 18 — Frontend Migration**
+- Created `src/lib/backend-proxy.ts` — typed proxy helper; forwards requests to Go when `BACKEND_URL` env var is set, falls back to direct Groq on unreachable backend
+- Updated routes: `generate-itinerary`, `trip-story`, `recommendations`, `preview-replace` — all try Go backend first
+- Added `preview-replace` Python router (was missing from Phase 17)
+
+**Phase 19 — Infrastructure & Deploy**
+- `backend/Dockerfile` — multi-stage build (golang:1.22 → alpine:3.20), no CGO
+- `ai-service/Dockerfile` — python:3.12-slim, layer-cached deps
+- `docker-compose.yml` — wires go-backend + python-ai; env vars from host `.env`
+- `.github/workflows/ci.yml` — 4 jobs: Next.js tsc, Go vet+build, Python import+ruff lint, Docker image builds
+- `SUDO_COMMANDS.md` — full runbook: Go install, Docker install, env var setup, how to start all 3 services
+
+**Security fixes (Phase 17)**
+- `middleware/auth.py`: `hmac.compare_digest` instead of `!=`, explicit 500 on empty secret
+- `photos.py`: URL host allowlist before SSRF fetch, content-type allowlist, `X-Content-Type-Options: nosniff`
+- `weather.py` + `photos.py`: added `verify_internal_token` dependency (were accidentally public)
+
+---
 
 ### 2026-06-18 (continued)
 
