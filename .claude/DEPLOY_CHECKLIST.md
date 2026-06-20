@@ -17,6 +17,9 @@ TAVILY_API_KEY=
 UNSPLASH_ACCESS_KEY=
 TELEGRAM_BOT_TOKEN=
 NEXT_PUBLIC_TELEGRAM_BOT_USERNAME=TrailGuideAI_bot
+RESEND_API_KEY=
+CRON_SECRET=
+NEXT_PUBLIC_SITE_URL=https://yourapp.vercel.app
 ```
 
 ## 3. Supabase Auth — Add Production URL
@@ -48,3 +51,7 @@ https://yourapp.vercel.app/auth/callback
 - [ ] Companion tab shows weather + nudges
 - [ ] Telegram bot responds to /start, /trip, /next, /status
 - [ ] Activity location links open Google Maps
+
+## 7. Cron Jobs (automatic after Vercel deploy)
+Vercel reads `vercel.json` and registers the crons automatically on deploy.
+Verify they appear at: Vercel Dashboard → Project → Settings → Cron Jobs
