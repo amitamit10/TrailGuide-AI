@@ -1,8 +1,10 @@
 import httpx
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
+from middleware.auth import verify_internal_token
 
-router = APIRouter(prefix="/weather")
+router = APIRouter(prefix="/weather", dependencies=[Depends(verify_internal_token)])
+
 
 @router.get("")
 async def get_weather(lat: float = Query(...), lng: float = Query(...)):
