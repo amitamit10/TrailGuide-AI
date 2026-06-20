@@ -27,10 +27,20 @@ export function TimelineClient({
 }) {
   const router = useRouter();
   const [selected, setSelected] = useState<SelectedActivity | null>(null);
+  const [completedOverrides, setCompletedOverrides] = useState<Record<string, boolean>>({});
 
   const handleReplaced = useCallback(() => {
     router.refresh();
   }, [router]);
+
+  async function handleToggle(activityId: string, completed: boolean) {
+    setCompletedOverrides((prev) => ({ ...prev, [activityId]: completed }));
+    await fetch("/api/activities/complete", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ activityId, completed }),
+    });
+  }
 
   return (
     <>
@@ -55,9 +65,13 @@ export function TimelineClient({
                   onClick={() => router.push(`/trips/${tripId}/activity/${activity.id}`)}
                 >
                   <ActivityCard
-                    activity={activity}
+                    activity={{
+                      ...activity,
+                      is_completed: completedOverrides[activity.id] ?? activity.is_completed,
+                    }}
                     isLast={i === day.activities.length - 1}
                     onReplace={() => setSelected({ activity, dayId: day.id })}
+                    onToggleComplete={handleToggle}
                   />
                 </div>
               ))}

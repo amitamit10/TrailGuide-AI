@@ -12,6 +12,7 @@ import {
   MapPin,
   RefreshCw,
   ExternalLink,
+  Check,
 } from "lucide-react";
 import type { Activity } from "@/types";
 import { PhotoLightbox } from "@/components/ui/PhotoLightbox";
@@ -58,9 +59,10 @@ interface ActivityCardProps {
   activity: Activity;
   isLast?: boolean;
   onReplace?: () => void;
+  onToggleComplete?: (id: string, completed: boolean) => void;
 }
 
-export function ActivityCard({ activity, isLast, onReplace }: ActivityCardProps) {
+export function ActivityCard({ activity, isLast, onReplace, onToggleComplete }: ActivityCardProps) {
   const meta = CATEGORY_META[activity.category] ?? CATEGORY_META.attraction;
   const Icon = meta.icon;
 
@@ -77,7 +79,7 @@ export function ActivityCard({ activity, isLast, onReplace }: ActivityCardProps)
         )}
       </div>
 
-      <div className="flex-1 pb-6">
+      <div className={`flex-1 pb-6 ${activity.is_completed ? "opacity-50" : ""}`}>
         <div className="flex items-start gap-3 mb-1">
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
@@ -88,6 +90,19 @@ export function ActivityCard({ activity, isLast, onReplace }: ActivityCardProps)
                     <Clock className="w-3 h-3" />
                     {activity.start_time}
                   </span>
+                )}
+                {onToggleComplete && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onToggleComplete(activity.id, !activity.is_completed); }}
+                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
+                      activity.is_completed
+                        ? "bg-primary border-primary text-white"
+                        : "border-border text-transparent hover:border-primary/50"
+                    }`}
+                    title={activity.is_completed ? "Mark incomplete" : "Mark complete"}
+                  >
+                    <Check className="w-3 h-3" />
+                  </button>
                 )}
                 {onReplace && (
                   <button
