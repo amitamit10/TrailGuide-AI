@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Groq from "groq-sdk";
 import { createClient } from "@/lib/supabase/server";
 import { aiRatelimit } from "@/lib/ratelimit";
+import { proxyToBackend } from "@/lib/backend-proxy";
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
@@ -67,6 +68,15 @@ export async function POST(req: NextRequest) {
   } = await req.json();
 
   if (!destination) return NextResponse.json({ error: "destination required" }, { status: 400 });
+
+  // Try Go backend when configured
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session?.access_token) {
+    const proxied = await proxyToBackend("/ai/recommendations", {
+      destination, interests, travelStyle, currentActivities: existingTitles,
+    }, session.access_token);
+    if (proxied) return proxied;
+  }
 
   const categoryLine = category ? `Focus only on category: ${category}.` : "Mix categories: food, attraction, and free activities.";
   const excludeLine = existingTitles.length > 0

@@ -3,6 +3,7 @@ import Groq from "groq-sdk";
 import type { GeneratedActivity } from "@/types";
 import { createClient } from "@/lib/supabase/server";
 import { aiRatelimit } from "@/lib/ratelimit";
+import { proxyToBackend } from "@/lib/backend-proxy";
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
@@ -41,7 +42,15 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { destination, travelStyle, interests, activity, neighbors, userRequest } = await req.json();
+  const body = await req.json();
+  const { destination, travelStyle, interests, activity, neighbors, userRequest } = body;
+
+  // Try Go backend when configured
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session?.access_token) {
+    const proxied = await proxyToBackend("/ai/preview-replace", body, session.access_token);
+    if (proxied) return proxied;
+  }
 
   const prompt = `Trip destination: ${destination}
 Travel style: ${travelStyle ?? "balanced"}
