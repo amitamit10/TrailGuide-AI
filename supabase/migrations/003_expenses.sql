@@ -15,6 +15,13 @@ alter table expenses enable row level security;
 
 drop policy if exists "Users can manage own expenses" on expenses;
 create policy "Users can manage own expenses" on expenses for all
-  using (auth.uid() = user_id);
+  using (
+    auth.uid() = user_id
+    and exists (select 1 from trips where trips.id = trip_id and trips.user_id = auth.uid())
+  )
+  with check (
+    auth.uid() = user_id
+    and exists (select 1 from trips where trips.id = trip_id and trips.user_id = auth.uid())
+  );
 
 create index if not exists expenses_trip_id_idx on expenses(trip_id);
