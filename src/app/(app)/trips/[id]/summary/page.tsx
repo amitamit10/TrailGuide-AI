@@ -11,7 +11,7 @@ export default async function SummaryPage({ params }: { params: Promise<{ id: st
 
   const { data: trip } = await supabase
     .from("trips")
-    .select("id, title, destination, start_date, end_date, status, travelers_count, budget_currency")
+    .select("id, title, destination, start_date, end_date, status, travelers_count, budget_currency, is_public")
     .eq("id", id)
     .eq("user_id", user.id)
     .single();

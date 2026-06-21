@@ -9,7 +9,7 @@ export default async function SharePage({ params }: { params: Promise<{ tripId: 
 
   const { data: trip } = await supabase
     .from("trips")
-    .select("id, title, destination, start_date, end_date, status, travelers_count, budget_currency")
+    .select("id, title, destination, start_date, end_date, status, travelers_count, budget_currency, is_public")
     .eq("id", tripId)
     .single();
 
