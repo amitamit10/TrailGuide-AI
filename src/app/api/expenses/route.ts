@@ -12,6 +12,11 @@ export interface Expense {
   created_at: string;
 }
 
+async function verifyTripOwnership(supabase: Awaited<ReturnType<typeof createClient>>, tripId: string, userId: string): Promise<boolean> {
+  const { data } = await supabase.from("trips").select("id").eq("id", tripId).eq("user_id", userId).single();
+  return !!data;
+}
+
 export async function GET(req: NextRequest) {
   const tripId = req.nextUrl.searchParams.get("tripId");
   if (!tripId) return NextResponse.json({ error: "tripId required" }, { status: 400 });
@@ -19,6 +24,9 @@ export async function GET(req: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  if (!await verifyTripOwnership(supabase, tripId, user.id))
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const { data, error } = await supabase
     .from("expenses")
@@ -41,6 +49,9 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+  if (!await verifyTripOwnership(supabase, tripId, user.id))
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
   const { data, error } = await supabase
     .from("expenses")
     .insert({ trip_id: tripId, user_id: user.id, title, amount, category: category ?? "other", note, date: date ?? new Date().toISOString().split("T")[0] })
@@ -59,7 +70,7 @@ export async function DELETE(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { error } = await supabase.from("expenses").delete().eq("id", id);
+  const { error } = await supabase.from("expenses").delete().eq("id", id).eq("user_id", user.id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }
