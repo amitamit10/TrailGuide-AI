@@ -30,6 +30,7 @@ interface Trip {
   status: string;
   travelers_count: number;
   budget_currency: string;
+  is_public: boolean;
 }
 
 interface Stats {
@@ -72,6 +73,8 @@ export function SummaryClient({ trip, activities, stats }: Props) {
   const [storyLoading, setStoryLoading] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [isPublic, setIsPublic] = useState(trip.is_public);
+  const [togglingPublic, setTogglingPublic] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -113,6 +116,38 @@ export function SummaryClient({ trip, activities, stats }: Props) {
     }
   }
 
+  async function togglePublic() {
+    if (isPublic) {
+      // Already public, just copy the link
+      const url = `${window.location.origin}/share/${trip.id}`;
+      navigator.clipboard.writeText(url).then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      });
+    } else {
+      // Make public
+      setTogglingPublic(true);
+      try {
+        const res = await fetch("/api/trips/visibility", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ trip_id: trip.id, is_public: true }),
+        });
+        if (res.ok) {
+          setIsPublic(true);
+          // Copy the link after making it public
+          const url = `${window.location.origin}/share/${trip.id}`;
+          navigator.clipboard.writeText(url).then(() => {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+          });
+        }
+      } finally {
+        setTogglingPublic(false);
+      }
+    }
+  }
+
   function handleShare() {
     const url = `${window.location.origin}/share/${trip.id}`;
     navigator.clipboard.writeText(url).then(() => {
@@ -133,11 +168,12 @@ export function SummaryClient({ trip, activities, stats }: Props) {
       {/* Action buttons */}
       <div className="flex gap-2 mb-6">
         <button
-          onClick={handleShare}
-          className="flex-1 h-11 rounded-xl border border-border text-sm font-medium flex items-center justify-center gap-2 hover:bg-muted/50 transition-colors"
+          onClick={togglePublic}
+          disabled={togglingPublic}
+          className="flex-1 h-11 rounded-xl border border-border text-sm font-medium flex items-center justify-center gap-2 hover:bg-muted/50 transition-colors disabled:opacity-60"
         >
           <Share2 className="w-4 h-4" />
-          {copied ? "Link copied!" : "Share trip"}
+          {togglingPublic ? "..." : copied ? "Link copied!" : isPublic ? "Copy share link" : "Make public & share"}
         </button>
         <button
           onClick={handleDownload}
@@ -163,6 +199,33 @@ export function SummaryClient({ trip, activities, stats }: Props) {
             }))}
         />
       </div>
+
+      {/* Public badge */}
+      {isPublic && (
+        <div className="flex items-center gap-1.5 text-xs text-primary font-medium mb-4 px-3 py-2 bg-primary/5 rounded-lg">
+          <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+          Public — anyone with the link can view this trip
+          <button
+            onClick={async () => {
+              setTogglingPublic(true);
+              try {
+                await fetch("/api/trips/visibility", {
+                  method: "PATCH",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ trip_id: trip.id, is_public: false }),
+                });
+                setIsPublic(false);
+              } finally {
+                setTogglingPublic(false);
+              }
+            }}
+            disabled={togglingPublic}
+            className="ml-auto text-muted-foreground hover:text-foreground transition-colors disabled:opacity-60"
+          >
+            Make private
+          </button>
+        </div>
+      )}
 
       {/* Shareable card */}
       <div ref={cardRef} className="flex flex-col gap-4 animate-fade-up">
