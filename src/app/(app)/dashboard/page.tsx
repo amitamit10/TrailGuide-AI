@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { Navigation, Plus, MapPin, Calendar, ChevronRight, Settings } from "lucide-react";
+import { Navigation, Plus, MapPin, Calendar, ChevronRight, Settings, Compass } from "lucide-react";
 import type { Trip } from "@/types";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -92,6 +92,9 @@ export default async function DashboardPage() {
           <span className="font-bold text-base">TrailGuide AI</span>
         </div>
         <div className="flex items-center gap-2">
+          <Link href="/explore" className="w-8 h-8 rounded-xl flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
+            <Compass className="w-4 h-4" />
+          </Link>
           <Link href="/settings" className="w-8 h-8 rounded-xl flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
             <Settings className="w-4 h-4" />
           </Link>
