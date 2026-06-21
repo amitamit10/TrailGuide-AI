@@ -10,10 +10,10 @@
 | 4 | Live Trip | ✅ Done |
 | 5 | Trip Summary | ✅ Done |
 | 6 | Deploy | ✅ Done |
-| 7 | Notifications | 📋 Planned |
-| 8 | Budget Tracker | 📋 Planned |
-| 9 | Packing List | 📋 Planned |
-| 10 | Social | 📋 Planned |
+| 7 | Notifications | ✅ Done |
+| 8 | Budget Tracker | ✅ Done |
+| 9 | Packing List | ✅ Done |
+| 10 | Social | ✅ Done |
 | 11 | Documentation | ✅ Done |
 | 12 | Security Hardening | ✅ Done |
 | 13 | Rate Limiting & Caching | ✅ Done |
@@ -97,7 +97,7 @@ Groups define the recommended execution order. Within a group, phases listed as 
 | B | Production Ship | 6, 12 | ✅ Complete | Done |
 | C | Current-Stack Hardening | 13, 14, 15 | ✅ Complete | Done |
 | D | Architecture Transition | 16, 17, 18, 19 | ✅ Complete | Done |
-| E | Feature Expansion | 7, 8, 9, 10 | 📋 Planned | 7, 8, 9, 10 in parallel — after Group D |
+| E | Feature Expansion | 7, 8, 9, 10 | ✅ Complete | 7, 8, 9, 10 in parallel — after Group D |
 | F | Trip Enrichment | 20, 21, 22, 23 | 📋 Planned | 20, 21, 22, 23 in parallel — after Group D |
 | G | Discovery & Ops | 24, 25 | 📋 Planned | 24 + 25 in parallel — after Group D |
 | H | Code Quality & Debug | 26-35 | 📋 Planned | 26 first (AGENTS.md), then 27-34 in parallel, 35 last (audit) |
@@ -131,6 +131,46 @@ Groups define the recommended execution order. Within a group, phases listed as 
 ---
 
 ## Changelog
+
+### 2026-06-22
+
+**Group E — Feature Expansion ✅ Complete**
+
+**Phase 7 — Notifications**
+- Vercel cron jobs in `vercel.json`: advance-trip-status (6am), daily-briefing (7am), pre-trip-reminder (8am)
+- `GET /api/cron/advance-trip-status` — auto-transitions trip status planning→active→completed based on date
+- `GET /api/cron/daily-briefing` — sends Telegram message with today's activities for active trips
+- `GET /api/cron/pre-trip-reminder` — sends Resend HTML email 3 and 1 days before trip start
+
+**Phase 8 — Budget Tracker**
+- `supabase/migrations/003_expenses.sql` — `expenses` table with hardened RLS (user_id + trip ownership in USING and WITH CHECK)
+- `GET/POST/DELETE /api/expenses` — CRUD with `verifyTripOwnership()` defense-in-depth
+- `GET /api/expenses/export` — CSV download with formula injection prevention (`csvSafe` function, `\r\n` line endings)
+- Expenses tab in TripTabNav; `ExpensesClient` with budget bar, category breakdown, optimistic updates
+
+**Phase 9 — Packing List**
+- `supabase/migrations/004_checklist.sql` — `checklist_items` table with hardened RLS
+- `POST /api/ai/packing-list` — idempotent AI generation (Groq llama-3.3-70b), Open-Meteo weather context, trip ownership + rate limiting
+- `GET /api/visa` — Tavily-powered visa/entry requirements, destination input validation (`^[A-Za-z ,'-]{1,100}$`), source URL allowlist (https-only), 24-hour public cache
+- `PATCH /api/checklist/check` — toggle is_checked with RLS-scoped ownership probe
+- `POST/DELETE /api/checklist/item` — add/remove manual checklist items
+- Pack tab in TripTabNav; `PackingClient` with progress bar, visa card, category-grouped checklist, optimistic updates
+
+**Phase 10 — Social**
+- `supabase/migrations/005_public_trips.sql` — `is_public` column + RLS policies for public SELECT on trips/itinerary_days/activities
+- `PATCH /api/trips/visibility` — toggle is_public with ownership check + boolean validation
+- `POST /api/trips/clone` — copies a public trip (itinerary_days + activities) into the authenticated user's account
+- Public/private toggle in Summary tab with animated badge, "Make public & share" → "Copy share link" flow
+- `/explore` page — community itineraries feed, Clone button, "View itinerary" link
+- Compass icon in dashboard header linking to `/explore`
+- Photo mosaic in Summary memory card (2–6 activity photos in 3-column grid, included in PNG export)
+
+**Security fixes (Group E)**
+- activities/complete: RLS-scoped ownership probe + `typeof completed !== "boolean"` validation before update
+- expenses/export: `csvSafe()` function prevents CSV formula injection
+- visa route: destination charset validation, https-only source URL validation
+- packing-list: trip ownership check, rate limiting, Groq error handling
+- SummaryClient: fixed `trip_id`/`is_public` → `tripId`/`isPublic` to match API contract
 
 ### 2026-06-20
 

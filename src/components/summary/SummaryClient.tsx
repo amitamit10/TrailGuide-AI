@@ -64,6 +64,24 @@ function ActivityPhoto({ query, title }: { query?: string | null; title: string 
   );
 }
 
+function PhotoMosaic({ activities }: { activities: Activity[] }) {
+  const withPhotos = activities.filter((a) => a.photo_query).slice(0, 6);
+  if (withPhotos.length < 2) return null;
+  return (
+    <div className="grid grid-cols-3 gap-1.5 rounded-2xl overflow-hidden">
+      {withPhotos.map((a) => (
+        <div key={a.id} className="aspect-square bg-muted overflow-hidden">
+          <img
+            src={`/api/places/photo?query=${encodeURIComponent(a.photo_query!)}&w=300`}
+            alt={a.title}
+            className="w-full h-full object-cover"
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function formatDate(d: string) {
   return new Date(d + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
@@ -131,7 +149,7 @@ export function SummaryClient({ trip, activities, stats }: Props) {
         const res = await fetch("/api/trips/visibility", {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ trip_id: trip.id, is_public: true }),
+          body: JSON.stringify({ tripId: trip.id, isPublic: true }),
         });
         if (res.ok) {
           setIsPublic(true);
@@ -212,7 +230,7 @@ export function SummaryClient({ trip, activities, stats }: Props) {
                 await fetch("/api/trips/visibility", {
                   method: "PATCH",
                   headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ trip_id: trip.id, is_public: false }),
+                  body: JSON.stringify({ tripId: trip.id, isPublic: false }),
                 });
                 setIsPublic(false);
               } finally {
@@ -239,6 +257,9 @@ export function SummaryClient({ trip, activities, stats }: Props) {
             {trip.destination}
           </div>
         </div>
+
+        {/* Photo mosaic */}
+        <PhotoMosaic activities={activities} />
 
         {/* Stats */}
         <div className="grid grid-cols-2 gap-3">
