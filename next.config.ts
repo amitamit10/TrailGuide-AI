@@ -27,6 +27,7 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  turbopack: {},
   serverExternalPackages: ["pdf-parse"],
   async headers() {
     return [
