@@ -23,11 +23,17 @@ export async function GET(req: NextRequest) {
     .eq("trip_id", tripId)
     .order("date", { ascending: true });
 
+  function csvSafe(v: unknown): string {
+    let s = String(v ?? "");
+    if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
+    return `"${s.replace(/"/g, '""')}"`;
+  }
+
   const rows = [
     ["Date", "Title", "Category", "Amount", "Note"],
     ...(expenses ?? []).map((e) => [e.date, e.title, e.category, e.amount, e.note ?? ""]),
   ];
-  const csv = rows.map((r) => r.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")).join("\n");
+  const csv = rows.map((r) => r.map(csvSafe).join(",")).join("\r\n");
 
   return new NextResponse(csv, {
     headers: {
