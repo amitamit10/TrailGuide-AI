@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, List, Calendar, Map, Upload, Compass, Sparkles, ScrollText, Receipt } from "lucide-react";
+import { LayoutDashboard, List, Calendar, Map, Upload, Compass, Sparkles, ScrollText, Receipt, Backpack } from "lucide-react";
 
 const TABS = [
   { label: "Dashboard", href: "dashboard", icon: LayoutDashboard },
@@ -10,6 +10,7 @@ const TABS = [
   { label: "Discover",  href: "discover",  icon: Compass         },
   { label: "Summary",   href: "summary",   icon: ScrollText      },
   { label: "Expenses",  href: "expenses",  icon: Receipt         },
+  { label: "Pack",      href: "pack",      icon: Backpack        },
   { label: "Calendar",  href: "calendar",  icon: Calendar        },
   { label: "Map",       href: "map",       icon: Map             },
   { label: "Import",    href: "import",    icon: Upload          },
