@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Plus, Trash2, Loader2, Receipt } from "lucide-react";
+import { Plus, Trash2, Loader2, Receipt, Download } from "lucide-react";
 import type { Expense } from "@/app/api/expenses/route";
 
 const CATEGORIES = ["food", "transport", "accommodation", "attraction", "shopping", "other"];
@@ -79,12 +79,20 @@ export function ExpensesClient({ trip }: { trip: Trip }) {
           <p className="text-xs text-muted-foreground">Total spent</p>
           <p className="text-2xl font-bold">{trip.budget_currency} {total.toFixed(2)}</p>
         </div>
-        <button
-          onClick={() => setShowForm((v) => !v)}
-          className="h-10 px-4 rounded-xl bg-primary text-white text-sm font-semibold flex items-center gap-2 hover:bg-primary/90 transition-colors"
-        >
-          <Plus className="w-4 h-4" /> Add expense
-        </button>
+        <div className="flex items-center gap-2">
+          <a
+            href={`/api/expenses/export?tripId=${trip.id}`}
+            className="h-10 px-3 rounded-xl border border-border text-sm flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <Download className="w-3.5 h-3.5" /> CSV
+          </a>
+          <button
+            onClick={() => setShowForm((v) => !v)}
+            className="h-10 px-4 rounded-xl bg-primary text-white text-sm font-semibold flex items-center gap-2 hover:bg-primary/90 transition-colors"
+          >
+            <Plus className="w-4 h-4" /> Add expense
+          </button>
+        </div>
       </div>
 
       {/* Add form */}
