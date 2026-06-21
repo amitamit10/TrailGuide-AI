@@ -4,9 +4,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
 import { createServiceClient } from "@/lib/supabase/server";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 export async function GET(req: NextRequest) {
+  const resend = new Resend(process.env.RESEND_API_KEY);
   if (
     req.headers.get("authorization") !== `Bearer ${process.env.CRON_SECRET}`
   ) {
