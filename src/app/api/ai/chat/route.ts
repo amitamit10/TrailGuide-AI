@@ -33,6 +33,9 @@ export async function POST(req: NextRequest) {
   if (!message || typeof message !== "string") {
     return NextResponse.json({ error: "message is required" }, { status: 400 });
   }
+  if (message.length > 4000) {
+    return NextResponse.json({ error: "message too long (max 4000 characters)" }, { status: 400 });
+  }
 
   const safeHistory = Array.isArray(history) ? history : [];
 

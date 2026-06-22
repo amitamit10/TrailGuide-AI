@@ -1,6 +1,6 @@
 import json
-from fastapi import APIRouter, Depends
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, Field
 from typing import List, Optional
 from middleware.auth import verify_internal_token
 from services.groq_client import get_groq
@@ -30,12 +30,12 @@ Use real coordinates for the destination city."""
 
 
 class PreviewReplaceRequest(BaseModel):
-    destination: str
-    travelStyle: Optional[str] = "balanced"
-    interests: Optional[List[str]] = []
+    destination: str = Field(..., max_length=300)
+    travelStyle: Optional[str] = Field(default="balanced", max_length=50)
+    interests: Optional[List[str]] = Field(default=[], max_length=20)
     activity: dict
-    neighbors: Optional[List[dict]] = []
-    userRequest: str
+    neighbors: Optional[List[dict]] = Field(default=[], max_length=20)
+    userRequest: str = Field(..., max_length=1000)
 
 
 @router.post("/preview-replace")
@@ -76,4 +76,7 @@ Generate a replacement that fits the {req.activity.get('start_time', '?')} – {
         raw = raw.split("```")[1]
         if raw.startswith("json"):
             raw = raw[4:]
-    return json.loads(raw.strip())
+    try:
+        return json.loads(raw.strip())
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=502, detail="AI returned invalid JSON")

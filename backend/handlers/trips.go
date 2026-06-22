@@ -114,6 +114,16 @@ func (h *TripsHandler) Update(c *gin.Context) {
 		return
 	}
 
+	if body.Status != nil {
+		switch *body.Status {
+		case "planning", "active", "completed":
+			// valid
+		default:
+			c.JSON(http.StatusBadRequest, gin.H{"error": "status must be planning, active, or completed"})
+			return
+		}
+	}
+
 	var t Trip
 	err := h.db.QueryRow(context.Background(),
 		`UPDATE trips

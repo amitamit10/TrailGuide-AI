@@ -1,7 +1,7 @@
 import json
 import os
-from fastapi import APIRouter, Depends
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, Field
 from typing import List, Optional
 from middleware.auth import verify_internal_token
 from services.groq_client import get_groq
@@ -15,10 +15,10 @@ except Exception:
 router = APIRouter(prefix="/ai", dependencies=[Depends(verify_internal_token)])
 
 class RecommendationsRequest(BaseModel):
-    destination: str
-    interests: List[str]
-    currentActivities: List[str] = []
-    date: Optional[str] = None
+    destination: str = Field(..., max_length=300)
+    interests: List[str] = Field(default=[], max_length=20)
+    currentActivities: List[str] = Field(default=[], max_length=50)
+    date: Optional[str] = Field(default=None, max_length=20)
 
 @router.post("/recommendations")
 async def recommendations(req: RecommendationsRequest):
@@ -65,4 +65,7 @@ Return ONLY valid JSON:
         raw = raw.split("```")[1]
         if raw.startswith("json"):
             raw = raw[4:]
-    return json.loads(raw.strip())
+    try:
+        return json.loads(raw.strip())
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=502, detail="AI returned invalid JSON")

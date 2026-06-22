@@ -23,6 +23,13 @@ export async function POST(req: NextRequest) {
   const body = await req.json();
   const { destination, startDate, endDate, activities } = body;
 
+  if (!destination || typeof destination !== "string" || destination.length > 300) {
+    return NextResponse.json({ error: "destination required (max 300 chars)" }, { status: 400 });
+  }
+  if (!Array.isArray(activities) || activities.length > 200) {
+    return NextResponse.json({ error: "activities must be an array (max 200)" }, { status: 400 });
+  }
+
   // Try Go backend when configured
   const { data: { session } } = await supabase.auth.getSession();
   if (session?.access_token) {

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List
 from middleware.auth import verify_internal_token
 from services.groq_client import get_groq
@@ -8,12 +8,12 @@ from services.groq_client import get_groq
 router = APIRouter(prefix="/ai", dependencies=[Depends(verify_internal_token)])
 
 class Message(BaseModel):
-    role: str
-    content: str
+    role: str = Field(..., max_length=20)
+    content: str = Field(..., max_length=8000)
 
 class ChatRequest(BaseModel):
-    messages: List[Message]
-    tripContext: str = ""
+    messages: List[Message] = Field(..., max_length=100)
+    tripContext: str = Field(default="", max_length=2000)
 
 @router.post("/chat")
 async def chat(req: ChatRequest):

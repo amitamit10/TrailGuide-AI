@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List
 from middleware.auth import verify_internal_token
 from services.groq_client import get_groq
@@ -7,10 +7,10 @@ from services.groq_client import get_groq
 router = APIRouter(prefix="/ai", dependencies=[Depends(verify_internal_token)])
 
 class StoryRequest(BaseModel):
-    destination: str
-    startDate: str
-    endDate: str
-    activities: List[str]
+    destination: str = Field(..., max_length=300)
+    startDate: str = Field(..., max_length=20)
+    endDate: str = Field(..., max_length=20)
+    activities: List[str] = Field(..., max_length=200)
 
 @router.post("/trip-story")
 async def trip_story(req: StoryRequest):

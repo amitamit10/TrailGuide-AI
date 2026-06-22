@@ -64,8 +64,10 @@ export async function POST(req: NextRequest) {
     travelStyle = "balanced",
     existingTitles = [],
     category,
-    count = 8,
+    count: rawCount = 8,
   } = await req.json();
+  // Cap count to prevent prompt inflation / excessive token usage.
+  const count = Math.min(Math.max(1, Number(rawCount) || 8), 20);
 
   if (!destination) return NextResponse.json({ error: "destination required" }, { status: 400 });
 
