@@ -3,12 +3,11 @@ export const maxDuration = 60;
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
 import { createServiceClient } from "@/lib/supabase/server";
+import { isAuthorizedCron } from "@/lib/cron-auth";
 
 export async function GET(req: NextRequest) {
   const resend = new Resend(process.env.RESEND_API_KEY);
-  if (
-    req.headers.get("authorization") !== `Bearer ${process.env.CRON_SECRET}`
-  ) {
+  if (!isAuthorizedCron(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

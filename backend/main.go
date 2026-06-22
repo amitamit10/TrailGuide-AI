@@ -21,9 +21,11 @@ func main() {
 
 	r := gin.Default()
 
-	// CORS
+	// CORS — origin is configurable (CORS_ALLOW_ORIGIN); pin it to the frontend
+	// origin in production rather than the wildcard default.
 	r.Use(func(c *gin.Context) {
-		c.Header("Access-Control-Allow-Origin", "*")
+		c.Header("Access-Control-Allow-Origin", cfg.CORSAllowOrigin)
+		c.Header("Vary", "Origin")
 		c.Header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS")
 		c.Header("Access-Control-Allow-Headers", "Authorization,Content-Type")
 		if c.Request.Method == "OPTIONS" {
