@@ -147,11 +147,15 @@ Groups define the recommended execution order. Within a group, phases listed as 
 - Python `recommendations.py`: added `field_validator` to cap each `interests` item to 100 chars and each `currentActivities` item to 200 chars
 - `ai-service/requirements.txt`: pinned `idna>=3.15` to address PYSEC-2026-215 in transitive dep
 
+- `ai/generate-itinerary`: sanitize `destination`(300), `start_date`/`end_date`(20), `travelers_count`(1–50 integer), `interests` per-item(100) after JSON parse but before forwarding to AI — field presence was validated but bounds were not
+- `ai/edit-itinerary`: cap `editCommand` to 2000 chars before passing to Groq prompt — was unbounded despite Python service `edit.py` enforcing the same cap
+- Go `trips.go` Create + Update: reject payloads where `title`>500, `destination`>300, `start_date`/`end_date`>20 chars — prevents unbounded storage of arbitrarily large strings via the Go backend
+
 **npm audit result:** only PostCSS XSS (GHSA-qx2v-qp2m-jg93) — build-time only, already in accepted risks table; no new runtime vulnerabilities
 
 **Complete surface coverage achieved:**
 - All 27 Next.js API routes reviewed and patched
-- All 7 Go backend handlers reviewed (parameterized SQL throughout, JWT signing-method pinned, CORS env-driven, status enum validated, HTTP client timeout set)
+- All 7 Go backend handlers reviewed (parameterized SQL throughout, JWT signing-method pinned, CORS env-driven, status enum validated, HTTP client timeout set, field-length caps on Create/Update)
 - All 11 Python AI service routers reviewed and patched
 - All Pydantic models have explicit `max_length` and `ge`/`le` bounds
 - All `json.loads()` calls wrapped in `try/except` returning 502

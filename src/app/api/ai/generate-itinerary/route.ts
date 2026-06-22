@@ -37,6 +37,17 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // Sanitize prompt-injected fields before forwarding to AI.
+  config = {
+    ...config,
+    destination: String(config.destination).slice(0, 300),
+    start_date: String(config.start_date).slice(0, 20),
+    end_date: String(config.end_date).slice(0, 20),
+    travelers_count: Math.min(Math.max(1, Number(config.travelers_count) || 1), 50),
+    interests: (Array.isArray(config.interests) ? config.interests : [])
+      .slice(0, 20).map((i: unknown) => (typeof i === "string" ? i.slice(0, 100) : "")).filter(Boolean),
+  };
+
   // Try Go backend when configured
   const { data: { session } } = await supabase.auth.getSession();
   if (session?.access_token) {
