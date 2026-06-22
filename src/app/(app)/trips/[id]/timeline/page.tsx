@@ -56,7 +56,7 @@ export default async function TimelinePage({
 
   return (
     <div className="flex flex-col min-h-[calc(100vh-112px)]">
-      <TimelineClient tripId={id} days={typedDays} />
+      <TimelineClient tripId={id} destination={trip.destination} days={typedDays} />
       <EditBar tripId={id} />
     </div>
   );
