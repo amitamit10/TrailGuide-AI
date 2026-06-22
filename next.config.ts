@@ -12,6 +12,13 @@ const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(self)" },
+  // Isolate this browsing context from cross-origin openers (Spectre mitigation).
+  { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
+  // Prevent cross-origin no-cors reads of our responses.
+  { key: "Cross-Origin-Resource-Policy", value: "same-origin" },
+  // HSTS — 1 year, include subdomains. Vercel also enforces this at the CDN
+  // edge, but belt-and-suspenders is correct for any direct-origin connections.
+  { key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains" },
   {
     key: "Content-Security-Policy",
     value: [
@@ -34,6 +41,13 @@ const nextConfig: NextConfig = {
       {
         source: "/(.*)",
         headers: securityHeaders,
+      },
+      {
+        // The photo proxy intentionally serves bytes to cross-origin CORS requests
+        // (html2canvas on the frontend). Override CORP to cross-origin so no-cors
+        // embeds are also allowed; CORS headers on the route itself still gate access.
+        source: "/api/places/photo",
+        headers: [{ key: "Cross-Origin-Resource-Policy", value: "cross-origin" }],
       },
     ];
   },
