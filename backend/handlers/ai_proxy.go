@@ -4,6 +4,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -18,7 +19,7 @@ func NewAIProxyHandler(aiServiceURL, internalAPISecret string) *AIProxyHandler {
 	return &AIProxyHandler{
 		aiServiceURL:      strings.TrimRight(aiServiceURL, "/"),
 		internalAPISecret: internalAPISecret,
-		client:            &http.Client{},
+		client:            &http.Client{Timeout: 55 * time.Second},
 	}
 }
 

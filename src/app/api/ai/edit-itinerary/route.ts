@@ -31,6 +31,21 @@ export async function POST(req: NextRequest) {
 
   const { tripId, editCommand } = body;
 
+  if (!tripId || typeof tripId !== "string") {
+    return NextResponse.json({ error: "tripId required" }, { status: 400 });
+  }
+
+  // Explicit ownership check — prevents IDOR against public trips where RLS
+  // allows SELECT but not writes. Without this, any authenticated user can
+  // trigger an AI call on another user's public trip, consuming Groq quota.
+  const { data: ownedTrip } = await supabase
+    .from("trips")
+    .select("id")
+    .eq("id", tripId)
+    .eq("user_id", user.id)
+    .single();
+  if (!ownedTrip) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
   const { data: days } = await supabase
     .from("itinerary_days")
     .select("*, activities(*)")

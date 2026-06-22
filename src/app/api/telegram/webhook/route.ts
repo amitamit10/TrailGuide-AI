@@ -1,3 +1,4 @@
+import { timingSafeEqual as cryptoTimingSafeEqual } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { Bot, webhookCallback } from "grammy";
 import { createServiceClient } from "@/lib/supabase/server";
@@ -178,11 +179,9 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// Constant-time string compare to avoid leaking the secret via response timing.
 function timingSafeEqual(a: string, b: string): boolean {
-  let diff = a.length ^ b.length;
-  for (let i = 0; i < a.length; i++) {
-    diff |= a.charCodeAt(i) ^ b.charCodeAt(i % b.length);
-  }
-  return diff === 0;
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  if (bufA.length !== bufB.length) return false;
+  return cryptoTimingSafeEqual(bufA, bufB);
 }
