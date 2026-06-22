@@ -24,7 +24,7 @@
 | 18 | Frontend Migration | ✅ Done |
 | 19 | Infrastructure & Deploy | ✅ Done |
 | 20 | Real-time Collaboration | 📋 Planned |
-| 21 | Photo Journal | 📋 Planned |
+| 21 | Photo Journal | ✅ Done |
 | 22 | Flight Tracker | 📋 Planned |
 | 23 | Language & Culture Toolkit | ✅ Done |
 | 24 | AI Destination Discovery | 📋 Planned |
@@ -131,6 +131,23 @@ Groups define the recommended execution order. Within a group, phases listed as 
 ---
 
 ## Changelog
+
+### 2026-06-22 (continued)
+
+**Phase 21 — Photo Journal ✅ Done**
+- `supabase/migrations/006_activity_photos.sql` — `activity_photos` table (activity_id FK, trip_id FK, storage_path, caption, created_at); RLS policy via trip ownership check; index on activity_id
+- `src/app/api/photos/upload-url/route.ts` — POST: verifies trip ownership, generates signed upload URL via Supabase Storage service client; sanitizes filenames to prevent URL encoding issues
+- `src/app/api/photos/route.ts` — GET (list by activityId), POST (save metadata after upload), DELETE (removes DB row + storage object via service client)
+- `src/app/api/ai/caption/route.ts` — POST: Groq llama-3.1-8b-instant generates a ≤15-word evocative travel photo caption from activity title + destination
+- `src/components/photos/PhotoThumbnails.tsx` — fetches and renders uploaded photo thumbnails (64×64) with hover-to-delete; reads public bucket URL from `NEXT_PUBLIC_SUPABASE_URL`
+- `src/components/photos/PhotoUpload.tsx` — camera button that triggers file input (≤10 MB, JPEG/PNG/WebP/HEIC), uploads via signed URL (direct PUT to Storage), generates AI caption, saves metadata, triggers refresh
+- `src/components/itinerary/ActivityCard.tsx` — added `tripId?` and `destination?` props; renders PhotoThumbnails + PhotoUpload below metadata row when both props present
+- `src/components/itinerary/TimelineClient.tsx` — added `destination` prop, threads it down to ActivityCard
+- `src/app/(app)/trips/[id]/timeline/page.tsx` — passes `trip.destination` to TimelineClient
+
+**Manual setup required:** Create an `activity-photos` bucket in Supabase Storage dashboard (Storage → New bucket → name: `activity-photos` → Public: ON). Public bucket is required for thumbnail URLs (`/storage/v1/object/public/...`) to resolve without authentication. Note: public bucket means photo URLs are guessable if someone knows the UUID path structure — acceptable for an MVP travel journal.
+
+**Summary mosaic:** The existing PhotoMosaic in SummaryClient uses Wikipedia/Unsplash `photo_query` images (not uploaded photos). Uploaded activity photos are not yet wired into the summary mosaic — that is a future enhancement.
 
 ### 2026-06-22
 
