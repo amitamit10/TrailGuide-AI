@@ -1,6 +1,6 @@
 import json
-from fastapi import APIRouter, Depends
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, Field
 from typing import List, Optional
 from middleware.auth import verify_internal_token
 from services.groq_client import get_groq
@@ -8,17 +8,17 @@ from services.groq_client import get_groq
 router = APIRouter(prefix="/ai", dependencies=[Depends(verify_internal_token)])
 
 class GenerateRequest(BaseModel):
-    destination: str
-    startDate: str
-    endDate: str
-    travelers: int
-    tripStyle: str
-    interests: List[str]
-    transportMode: str
-    budget: str
-    flightInfo: Optional[str] = ""
-    hotelInfo: Optional[str] = ""
-    currency: str = "USD"
+    destination: str = Field(..., max_length=300)
+    startDate: str = Field(..., max_length=20)
+    endDate: str = Field(..., max_length=20)
+    travelers: int = Field(..., ge=1, le=50)
+    tripStyle: str = Field(..., max_length=50)
+    interests: List[str] = Field(default=[], max_length=20)
+    transportMode: str = Field(..., max_length=50)
+    budget: str = Field(..., max_length=50)
+    flightInfo: Optional[str] = Field(default="", max_length=2000)
+    hotelInfo: Optional[str] = Field(default="", max_length=2000)
+    currency: str = Field(default="USD", max_length=10)
 
 @router.post("/generate-itinerary")
 async def generate_itinerary(req: GenerateRequest):
@@ -70,4 +70,7 @@ Return ONLY valid JSON in this exact format (no markdown, no explanation):
         raw = raw.split("```")[1]
         if raw.startswith("json"):
             raw = raw[4:]
-    return json.loads(raw.strip())
+    try:
+        return json.loads(raw.strip())
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=502, detail="AI returned invalid JSON")

@@ -1,6 +1,6 @@
 import json
-from fastapi import APIRouter, Depends
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, Field
 from typing import List, Optional
 from middleware.auth import verify_internal_token
 from services.groq_client import get_groq
@@ -8,11 +8,11 @@ from services.groq_client import get_groq
 router = APIRouter(prefix="/ai", dependencies=[Depends(verify_internal_token)])
 
 class ReplaceRequest(BaseModel):
-    currentTitle: str
-    destination: str
-    date: str
-    interests: List[str]
-    category: Optional[str] = None
+    currentTitle: str = Field(..., max_length=300)
+    destination: str = Field(..., max_length=300)
+    date: str = Field(..., max_length=20)
+    interests: List[str] = Field(default=[], max_length=20)
+    category: Optional[str] = Field(default=None, max_length=50)
 
 @router.post("/replace-activity")
 async def replace_activity(req: ReplaceRequest):
@@ -47,4 +47,7 @@ Return ONLY valid JSON:
         raw = raw.split("```")[1]
         if raw.startswith("json"):
             raw = raw[4:]
-    return json.loads(raw.strip())
+    try:
+        return json.loads(raw.strip())
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=502, detail="AI returned invalid JSON")

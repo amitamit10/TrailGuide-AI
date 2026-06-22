@@ -45,6 +45,20 @@ export async function POST(req: NextRequest) {
   const { tripId, lat, lng, currentTime } = await req.json();
   if (!tripId) return NextResponse.json({ error: "tripId required" }, { status: 400 });
 
+  // Validate coordinates when supplied by the client.
+  if (lat !== undefined && lat !== null) {
+    const latN = Number(lat);
+    if (!Number.isFinite(latN) || latN < -90 || latN > 90) {
+      return NextResponse.json({ error: "lat must be a number in [-90, 90]" }, { status: 400 });
+    }
+  }
+  if (lng !== undefined && lng !== null) {
+    const lngN = Number(lng);
+    if (!Number.isFinite(lngN) || lngN < -180 || lngN > 180) {
+      return NextResponse.json({ error: "lng must be a number in [-180, 180]" }, { status: 400 });
+    }
+  }
+
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
