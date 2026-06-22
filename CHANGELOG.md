@@ -125,14 +125,26 @@ Groups define the recommended execution order. Within a group, phases listed as 
 | Risk | Severity | Reason accepted |
 |---|---|---|
 | PostCSS XSS in CSS output (`GHSA-qx2v-qp2m-jg93`) | Moderate | Build-time only — not a runtime attack surface. Fix would downgrade Next.js to 9.3.3 (breaking). Monitor for a non-breaking fix. |
-| No per-route rate limiting on AI endpoints | Low | Vercel DDoS protection + auth guard prevent anonymous abuse. Per-IP rate limiting is Phase 13+. |
 | CSP `unsafe-eval` in script-src | Low | Required by Next.js dev mode. In production (Vercel), Next.js compiles ahead of time — consider tightening post-deploy. |
+| Telegram linking has no proof-of-ownership | Low | A user can paste any numeric chat ID; `telegram_chat_id` is `UNIQUE` so it cannot be stolen from a linked account, only pre-claimed before the real owner links. Worst case is misdirected briefings (spam). Proper fix is a bot-issued verification code, deferred as a feature change. |
 
 ---
 
 ## Changelog
 
-### 2026-06-22
+### 2026-06-22 (security audit hardening)
+
+**Full-surface security review — findings remediated**
+- `places/photo` route: added HTTPS host allowlist (`upload.wikimedia.org`, `images.unsplash.com`) + image-only content-type allowlist + `X-Content-Type-Options: nosniff` before proxying bytes; removed the open `redirect(photoUrl)` fallback — closes SSRF/open-proxy gap and brings it in line with the Python `photos.py` hardening
+- New `src/lib/ratelimit.ts` `publicRatelimit` (30/min per IP) + `clientIp()` helper; applied to the three unauthenticated, externally-billed routes (`places/photo`, `visa`, `weather`) to stop anonymous quota drain
+- `weather` route: validate `lat`/`lng` are finite numbers in range before interpolating into the Open-Meteo URL (parameter-injection guard)
+- Telegram webhook: verify `X-Telegram-Bot-Api-Secret-Token` (constant-time) against `TELEGRAM_WEBHOOK_SECRET` so forged updates are rejected
+- New `src/lib/cron-auth.ts` `isAuthorizedCron()` — constant-time (`crypto.timingSafeEqual`) `CRON_SECRET` check; replaces `!==` comparisons in all three `cron/*` routes
+- Go backend CORS: `Access-Control-Allow-Origin` now driven by `CORS_ALLOW_ORIGIN` env (pin to frontend origin in prod; `*` default for dev) + `Vary: Origin`
+- Removed duplicate root `middleware.ts` (Next.js used `src/middleware.ts`; the dead root file was a foot-gun)
+- **Verified clean (no action needed):** Supabase RLS owner scoping, explicit ownership probes before all writes (`activities/complete`, `expenses`, `trips/*`), parameterized Go SQL, CSV formula-injection escaping, Go JWT signing-method pinning, Python constant-time internal-token check, no XSS sinks, no committed secrets
+
+**New env vars:** `TELEGRAM_WEBHOOK_SECRET` (optional — enables webhook auth), `CORS_ALLOW_ORIGIN` (optional — Go backend)
 
 **Group E — Feature Expansion ✅ Complete**
 
