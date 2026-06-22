@@ -29,7 +29,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { tripId, editCommand } = body;
+  const { tripId, editCommand: rawEditCommand } = body;
+  const editCommand = typeof rawEditCommand === "string" ? rawEditCommand.slice(0, 2000) : "";
 
   if (!tripId || typeof tripId !== "string") {
     return NextResponse.json({ error: "tripId required" }, { status: 400 });
