@@ -132,6 +132,27 @@ Groups define the recommended execution order. Within a group, phases listed as 
 
 ## Changelog
 
+### 2026-06-22 (deep security audit — round 2)
+
+**10 additional vulnerabilities found and patched**
+- `src/middleware.ts`: added `isServiceRoute` bypass for `/api/cron/*` and `/api/telegram/webhook` — without this, Vercel Cron and Telegram webhook calls (which have no user session) were silently redirected to `/login`, making all cron jobs and the Telegram bot non-functional in production
+- `ai/edit-itinerary`: added explicit trip ownership check (`.eq("user_id", user.id)`) before the Groq call — RLS allowed SELECT on public trips, so any authenticated user could trigger an AI call on another user's public trip (IDOR / quota theft)
+- `documents/import`: added trip ownership check and 10 MB file cap BEFORE file processing — previously quota was consumed even if the DB insert later failed due to RLS
+- `ai/recommendations`: capped `count` parameter at 20 (prevents prompt-inflation / token-drain via `count=10000`)
+- `ai/chat`: capped `message` at 4000 characters
+- `ai/companion`: added numeric bounds validation for client-supplied `lat`/`lng`
+- `ai/trip-story`: added destination length and activities array size validation
+- `ai/add-discovery`: type-check `lat`, `lng`, `estimated_cost` from client-supplied recommendation object before DB insert
+- Go proxy (`backend/handlers/ai_proxy.go`): set 55 s timeout on HTTP client (was unbounded — hanging upstream could block indefinitely)
+- Go trips Update (`backend/handlers/trips.go`): validate `status` is one of `planning|active|completed`
+- `telegram/webhook`: replaced custom `timingSafeEqual` with `crypto.timingSafeEqual` from Node.js
+- Python AI service (6 routers): wrapped all `json.loads()` calls in `try/except` — bare parse failures now return HTTP 502 instead of leaking raw AI output in a 500 stack trace
+- Python AI service (all routers): added `max_length` constraints to all Pydantic string and list fields
+
+**New accepted risks (none added) — all 10 findings fully patched**
+
+---
+
 ### 2026-06-22 (security audit hardening)
 
 **Full-surface security review — findings remediated**
