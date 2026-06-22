@@ -15,7 +15,9 @@ class StoryRequest(BaseModel):
 @router.post("/trip-story")
 async def trip_story(req: StoryRequest):
     groq = get_groq()
-    activity_list = "\n".join(f"- {a}" for a in req.activities)
+    # Cap each activity string to prevent prompt inflation.
+    capped = [a[:300] for a in req.activities]
+    activity_list = "\n".join(f"- {a}" for a in capped)
     prompt = f"""Write a vivid, personal travel story about a trip to {req.destination} ({req.startDate} to {req.endDate}).
 Activities experienced:
 {activity_list}

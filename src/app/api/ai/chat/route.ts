@@ -37,7 +37,27 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "message too long (max 4000 characters)" }, { status: 400 });
   }
 
-  const safeHistory = Array.isArray(history) ? history : [];
+  // Validate and sanitize history to prevent quota abuse via large/malformed entries.
+  // Each part is capped at 4000 chars and the total history is capped at 20 turns.
+  const safeHistory = (Array.isArray(history) ? history : [])
+    .slice(0, 20)
+    .filter((h: unknown) => h !== null && typeof h === "object")
+    .map((h: unknown) => {
+      const entry = h as Record<string, unknown>;
+      return {
+        role: entry.role === "model" ? ("model" as const) : ("user" as const),
+        parts: (Array.isArray(entry.parts) ? entry.parts : [])
+          .slice(0, 10)
+          .map((p: unknown) => {
+            const part = p as Record<string, unknown>;
+            return {
+              text: typeof part?.text === "string" ? (part.text as string).slice(0, 4000) : "",
+            };
+          })
+          .filter((p) => p.text.length > 0),
+      };
+    })
+    .filter((h) => h.parts.length > 0);
 
   try {
     const result = await gemini.sendChatMessage(

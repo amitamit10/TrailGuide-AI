@@ -1,7 +1,7 @@
 import json
 import os
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from typing import List, Optional
 from middleware.auth import verify_internal_token
 from services.groq_client import get_groq
@@ -19,6 +19,16 @@ class RecommendationsRequest(BaseModel):
     interests: List[str] = Field(default=[], max_length=20)
     currentActivities: List[str] = Field(default=[], max_length=50)
     date: Optional[str] = Field(default=None, max_length=20)
+
+    @field_validator("interests", mode="before")
+    @classmethod
+    def cap_interests(cls, v: List[str]) -> List[str]:
+        return [i[:100] if isinstance(i, str) else "" for i in (v or [])]
+
+    @field_validator("currentActivities", mode="before")
+    @classmethod
+    def cap_activities(cls, v: List[str]) -> List[str]:
+        return [a[:200] if isinstance(a, str) else "" for a in (v or [])]
 
 @router.post("/recommendations")
 async def recommendations(req: RecommendationsRequest):

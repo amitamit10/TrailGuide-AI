@@ -42,7 +42,12 @@ function weatherCodeToText(code: number): string {
 // POST /api/ai/companion
 // Body: { tripId, lat, lng, currentTime }
 export async function POST(req: NextRequest) {
-  const { tripId, lat, lng, currentTime } = await req.json();
+  const rawBody = await req.json();
+  const { tripId, lat, lng } = rawBody;
+  const rawTime = rawBody.currentTime;
+  const currentTime = typeof rawTime === "string" && /^\d{2}:\d{2}$/.test(rawTime)
+    ? rawTime
+    : new Date().toTimeString().slice(0, 5);
   if (!tripId) return NextResponse.json({ error: "tripId required" }, { status: 400 });
 
   // Validate coordinates when supplied by the client.
