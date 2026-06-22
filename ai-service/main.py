@@ -1,9 +1,8 @@
-import os
 from dotenv import load_dotenv
 load_dotenv()
 
-from fastapi import FastAPI
-from routers import generate, chat, recommendations, replace, story, edit, import_doc, photos, weather, preview_replace
+from fastapi import FastAPI  # noqa: E402
+from routers import generate, chat, recommendations, replace, story, edit, import_doc, photos, weather, preview_replace  # noqa: E402
 
 app = FastAPI(title="TrailGuide AI Service")
 
