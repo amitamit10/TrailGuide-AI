@@ -7,7 +7,10 @@ router = APIRouter(prefix="/weather", dependencies=[Depends(verify_internal_toke
 
 
 @router.get("")
-async def get_weather(lat: float = Query(...), lng: float = Query(...)):
+async def get_weather(
+    lat: float = Query(..., ge=-90, le=90),
+    lng: float = Query(..., ge=-180, le=180),
+):
     async with httpx.AsyncClient(timeout=8) as client:
         resp = await client.get(
             "https://api.open-meteo.com/v1/forecast",

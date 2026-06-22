@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from typing import List
 from middleware.auth import verify_internal_token
 from services.groq_client import get_groq
@@ -10,6 +10,13 @@ router = APIRouter(prefix="/ai", dependencies=[Depends(verify_internal_token)])
 class Message(BaseModel):
     role: str = Field(..., max_length=20)
     content: str = Field(..., max_length=8000)
+
+    @field_validator("role")
+    @classmethod
+    def validate_role(cls, v: str) -> str:
+        if v not in ("user", "assistant"):
+            raise ValueError("role must be 'user' or 'assistant'")
+        return v
 
 class ChatRequest(BaseModel):
     messages: List[Message] = Field(..., max_length=100)
