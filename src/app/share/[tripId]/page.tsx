@@ -11,8 +11,11 @@ export default async function SharePage({ params }: { params: Promise<{ tripId: 
     .from("trips")
     .select("id, title, destination, start_date, end_date, status, travelers_count, budget_currency, is_public")
     .eq("id", tripId)
+    .eq("is_public", true)
     .single();
 
+  // notFound() covers both missing trips AND private trips — intentionally
+  // the same response to avoid leaking whether a trip ID exists.
   if (!trip) notFound();
 
   const { data: days } = await supabase
