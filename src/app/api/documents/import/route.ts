@@ -50,6 +50,22 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "file and tripId required" }, { status: 400 });
   }
 
+  // Enforce a 10 MB file size cap before reading the full body.
+  if (file.size > 10 * 1024 * 1024) {
+    return NextResponse.json({ error: "File too large (max 10 MB)" }, { status: 413 });
+  }
+
+  // Verify trip ownership BEFORE processing — prevents quota waste where an
+  // attacker supplies someone else's tripId (AI would run, RLS would reject the
+  // DB insert, but the AI call was already charged).
+  const { data: ownedTrip } = await supabase
+    .from("trips")
+    .select("id")
+    .eq("id", tripId)
+    .eq("user_id", user.id)
+    .single();
+  if (!ownedTrip) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
   const bytes = await file.arrayBuffer();
   const buffer = Buffer.from(bytes);
   const mimeType = file.type;

@@ -9,6 +9,22 @@ export async function POST(req: NextRequest) {
   const { tripId, recommendation }: { tripId: string; recommendation: Recommendation } = await req.json();
   if (!tripId || !recommendation) return NextResponse.json({ error: "missing fields" }, { status: 400 });
 
+  // Validate that client-supplied coordinates and cost are safe numbers before
+  // inserting them into the database.
+  const recLat = Number(recommendation.lat);
+  const recLng = Number(recommendation.lng);
+  const recCost = Number(recommendation.estimated_cost ?? 0);
+  if (
+    !Number.isFinite(recLat) || recLat < -90 || recLat > 90 ||
+    !Number.isFinite(recLng) || recLng < -180 || recLng > 180 ||
+    !Number.isFinite(recCost) || recCost < 0
+  ) {
+    return NextResponse.json({ error: "Invalid recommendation data" }, { status: 400 });
+  }
+  if (!recommendation.title || typeof recommendation.title !== "string" || recommendation.title.length > 500) {
+    return NextResponse.json({ error: "Invalid recommendation title" }, { status: 400 });
+  }
+
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

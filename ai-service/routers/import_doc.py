@@ -1,13 +1,13 @@
 import json
-from fastapi import APIRouter, Depends
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, Field
 from middleware.auth import verify_internal_token
 from services.groq_client import get_groq
 
 router = APIRouter(prefix="/documents", dependencies=[Depends(verify_internal_token)])
 
 class ImportRequest(BaseModel):
-    content: str
+    content: str = Field(..., max_length=50_000)
 
 @router.post("/import")
 async def import_document(req: ImportRequest):
@@ -44,4 +44,7 @@ Return ONLY valid JSON:
         raw = raw.split("```")[1]
         if raw.startswith("json"):
             raw = raw[4:]
-    return {"extracted": json.loads(raw.strip())}
+    try:
+        return {"extracted": json.loads(raw.strip())}
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=502, detail="AI returned invalid JSON")
