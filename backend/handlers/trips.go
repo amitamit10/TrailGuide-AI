@@ -82,6 +82,11 @@ func (h *TripsHandler) Create(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	if len(body.Title) > 500 || len(body.Destination) > 300 ||
+		len(body.StartDate) > 20 || len(body.EndDate) > 20 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "field too long"})
+		return
+	}
 
 	var t Trip
 	err := h.db.QueryRow(context.Background(),
@@ -111,6 +116,18 @@ func (h *TripsHandler) Update(c *gin.Context) {
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	strLen := func(s *string) int {
+		if s == nil {
+			return 0
+		}
+		return len(*s)
+	}
+	if strLen(body.Title) > 500 || strLen(body.Destination) > 300 ||
+		strLen(body.StartDate) > 20 || strLen(body.EndDate) > 20 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "field too long"})
 		return
 	}
 
