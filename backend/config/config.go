@@ -12,6 +12,7 @@ type Config struct {
 	AIServiceURL     string
 	InternalAPISecret string
 	TelegramBotToken string
+	CORSAllowOrigin  string
 }
 
 func Load() *Config {
@@ -22,6 +23,8 @@ func Load() *Config {
 		AIServiceURL:      getEnv("AI_SERVICE_URL", "http://localhost:8081"),
 		InternalAPISecret: mustEnv("INTERNAL_API_SECRET"),
 		TelegramBotToken:  os.Getenv("TELEGRAM_BOT_TOKEN"),
+		// Pin to the frontend origin in production; defaults to "*" for local dev.
+		CORSAllowOrigin: getEnv("CORS_ALLOW_ORIGIN", "*"),
 	}
 	return c
 }

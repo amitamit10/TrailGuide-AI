@@ -156,6 +156,18 @@ export function makeBot() {
 // Webhook handler (used in production)
 export async function POST(req: NextRequest) {
   if (!TOKEN) return NextResponse.json({ error: "Bot not configured" }, { status: 503 });
+
+  // Verify the request actually came from Telegram. Register the webhook with
+  // ?secret_token=<TELEGRAM_WEBHOOK_SECRET> so Telegram sends this header on
+  // every update; reject anything that doesn't match.
+  const expected = process.env.TELEGRAM_WEBHOOK_SECRET;
+  if (expected) {
+    const got = req.headers.get("x-telegram-bot-api-secret-token") ?? "";
+    if (got.length !== expected.length || !timingSafeEqual(got, expected)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+  }
+
   try {
     const bot = makeBot();
     const handler = webhookCallback(bot, "std/http");
@@ -164,4 +176,13 @@ export async function POST(req: NextRequest) {
     console.error("Telegram webhook error:", err);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }
+}
+
+// Constant-time string compare to avoid leaking the secret via response timing.
+function timingSafeEqual(a: string, b: string): boolean {
+  let diff = a.length ^ b.length;
+  for (let i = 0; i < a.length; i++) {
+    diff |= a.charCodeAt(i) ^ b.charCodeAt(i % b.length);
+  }
+  return diff === 0;
 }
