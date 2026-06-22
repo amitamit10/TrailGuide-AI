@@ -26,7 +26,7 @@
 | 20 | Real-time Collaboration | 📋 Planned |
 | 21 | Photo Journal | 📋 Planned |
 | 22 | Flight Tracker | 📋 Planned |
-| 23 | Language & Culture Toolkit | 📋 Planned |
+| 23 | Language & Culture Toolkit | ✅ Done |
 | 24 | AI Destination Discovery | 📋 Planned |
 | 25 | Monitoring & Admin | 📋 Planned |
 | 26 | Agent-Friendly Codebase | 📋 Planned |
@@ -131,6 +131,16 @@ Groups define the recommended execution order. Within a group, phases listed as 
 ---
 
 ## Changelog
+
+### 2026-06-22
+
+**Phase 23 — Language & Culture Toolkit ✅ Done**
+- `supabase/migrations/007_culture_currency_cache.sql` — `culture_cache` (destination PK, jsonb, 7-day TTL) and `currency_cache` (base_currency PK, jsonb, 1-hour TTL) tables; no RLS (shared caches, no PII)
+- `src/app/api/culture-pack/route.ts` — GET `/api/culture-pack?tripId=` — verifies trip ownership, checks 7-day DB cache, generates full culture pack (phrases, customs, electricity, currency, water safety, internet, emergency numbers, visa summary) with Groq llama-3.3-70b-versatile + `response_format: json_object`, upserts result to `culture_cache`
+- `src/app/api/currency/route.ts` — GET `/api/currency?from=&to=` — checks 1-hour DB cache, fetches from open.er-api.com (free, no key), upserts to `currency_cache`, returns single rate; `Cache-Control: public, max-age=3600`
+- `src/app/(app)/trips/[id]/info/page.tsx` — Local Info server page component
+- `src/components/info/InfoClient.tsx` — client component with 5 sections: essential phrases table (local + pronunciation), live USD converter (editable input, real-time rate), customs & etiquette (tipping, dress code, do/don't list, water safety), emergency numbers (tappable tel: links in a grid), visa requirements (on-arrival/required badge, duration, summary)
+- `src/components/trip/TripTabNav.tsx` — added "Info" tab (Globe icon) after Pack
 
 ### 2026-06-22 (exhaustive security audit — round 3)
 
