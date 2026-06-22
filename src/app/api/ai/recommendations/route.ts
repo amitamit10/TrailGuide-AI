@@ -58,16 +58,15 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const {
-    destination,
-    interests = [],
-    travelStyle = "balanced",
-    existingTitles = [],
-    category,
-    count: rawCount = 8,
-  } = await req.json();
-  // Cap count to prevent prompt inflation / excessive token usage.
-  const count = Math.min(Math.max(1, Number(rawCount) || 8), 20);
+  const raw = await req.json();
+  const destination = typeof raw.destination === "string" ? raw.destination.slice(0, 300) : "";
+  const travelStyle = typeof raw.travelStyle === "string" ? raw.travelStyle.slice(0, 50) : "balanced";
+  const category = typeof raw.category === "string" ? raw.category.slice(0, 50) : undefined;
+  const count = Math.min(Math.max(1, Number(raw.count) || 8), 20);
+  const interests: string[] = (Array.isArray(raw.interests) ? raw.interests : [])
+    .slice(0, 20).map((i: unknown) => (typeof i === "string" ? i.slice(0, 100) : "")).filter(Boolean);
+  const existingTitles: string[] = (Array.isArray(raw.existingTitles) ? raw.existingTitles : [])
+    .slice(0, 20).map((t: unknown) => (typeof t === "string" ? t.slice(0, 200) : "")).filter(Boolean);
 
   if (!destination) return NextResponse.json({ error: "destination required" }, { status: 400 });
 

@@ -44,7 +44,8 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { tripId, activityId, dayId, userRequest } = await req.json();
+  const { tripId, activityId, dayId, userRequest: rawUserRequest } = await req.json();
+  const userRequest = typeof rawUserRequest === "string" ? rawUserRequest.slice(0, 1000) : "";
 
   // Load context: trip destination, the activity to replace, and its neighbors
   const { data: trip } = await supabase

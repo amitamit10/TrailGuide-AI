@@ -132,6 +132,33 @@ Groups define the recommended execution order. Within a group, phases listed as 
 
 ## Changelog
 
+### 2026-06-22 (exhaustive security audit — round 3)
+
+**11 additional vulnerabilities found and patched (complete surface sweep)**
+- `ai/chat`: validated and sanitized `history` array — previously the 4000-char `message` limit was bypassable by sending unlimited content in `history` items; now capped at 20 turns × 10 parts × 4000 chars each; also enforces `role` is `user|model` (no `system` role injection), strips non-string parts
+- `ai/packing-list`: added input bounds for all prompt-injected fields — `destination` (300), `startDate`/`endDate` (20), `travelStyle` (50), `travelers` (1–50 integer), per-interest cap (100 chars each)
+- `ai/replace-activity`: added 1000-char cap on `userRequest` before prompt injection
+- `ai/preview-replace` (Next.js): added 1000-char cap on `userRequest`, 300-char cap on `destination`, required `destination` present
+- `ai/recommendations`: capped per-item lengths for `interests` (100 chars) and `existingTitles` (200 chars) — previously only the array size was capped
+- `ai/companion`: validated `currentTime` must match `HH:MM` format; otherwise defaults to server-side current time (prevents arbitrary string injection into the AI context)
+- `ai/trip-story`: capped per-activity `title` (200 chars), `description` (500 chars), and added type validation before prompt serialization
+- Python `preview_replace.py`: replaced `activity: dict` with typed `ActivityRef` Pydantic model (`title` max 300, `start_time`/`end_time` max 10, `duration_minutes` 0–1440); replaced `neighbors: List[dict]` with `NeighborRef` model — previously arbitrary nested dict content went directly into the Groq prompt
+- Python `story.py`: cap each activity string to 300 chars before prompt serialization
+- Python `recommendations.py`: added `field_validator` to cap each `interests` item to 100 chars and each `currentActivities` item to 200 chars
+- `ai-service/requirements.txt`: pinned `idna>=3.15` to address PYSEC-2026-215 in transitive dep
+
+**npm audit result:** only PostCSS XSS (GHSA-qx2v-qp2m-jg93) — build-time only, already in accepted risks table; no new runtime vulnerabilities
+
+**Complete surface coverage achieved:**
+- All 27 Next.js API routes reviewed and patched
+- All 7 Go backend handlers reviewed (parameterized SQL throughout, JWT signing-method pinned, CORS env-driven, status enum validated, HTTP client timeout set)
+- All 11 Python AI service routers reviewed and patched
+- All Pydantic models have explicit `max_length` and `ge`/`le` bounds
+- All `json.loads()` calls wrapped in `try/except` returning 502
+- Dependency audit run (`npm audit`, `pip audit`); actionable CVEs addressed
+
+---
+
 ### 2026-06-22 (deep security audit — round 2)
 
 **10 additional vulnerabilities found and patched**

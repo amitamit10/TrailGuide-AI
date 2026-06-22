@@ -8,8 +8,19 @@ import { aiRatelimit } from "@/lib/ratelimit";
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 export async function POST(req: NextRequest) {
-  const { tripId, destination, startDate, endDate, travelStyle, interests, travelers } =
-    await req.json();
+  const raw = await req.json();
+  const { tripId } = raw;
+  const destination = typeof raw.destination === "string" ? raw.destination.slice(0, 300) : "";
+  const startDate = typeof raw.startDate === "string" ? raw.startDate.slice(0, 20) : "";
+  const endDate = typeof raw.endDate === "string" ? raw.endDate.slice(0, 20) : "";
+  const travelStyle = typeof raw.travelStyle === "string" ? raw.travelStyle.slice(0, 50) : "balanced";
+  const travelers = Math.min(Math.max(1, Number(raw.travelers) || 1), 50);
+  const interests: string[] = (Array.isArray(raw.interests) ? raw.interests : [])
+    .slice(0, 20).map((i: unknown) => (typeof i === "string" ? i.slice(0, 100) : "")).filter(Boolean);
+
+  if (!destination || !tripId) {
+    return NextResponse.json({ error: "tripId and destination required" }, { status: 400 });
+  }
 
   const supabase = await createClient();
   const {

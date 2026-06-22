@@ -43,7 +43,13 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { destination, travelStyle, interests, activity, neighbors, userRequest } = body;
+  const { travelStyle, interests, activity, neighbors } = body;
+  const destination = typeof body.destination === "string" ? body.destination.slice(0, 300) : "";
+  const userRequest = typeof body.userRequest === "string" ? body.userRequest.slice(0, 1000) : "";
+
+  if (!destination) {
+    return NextResponse.json({ error: "destination required" }, { status: 400 });
+  }
 
   // Try Go backend when configured
   const { data: { session } } = await supabase.auth.getSession();

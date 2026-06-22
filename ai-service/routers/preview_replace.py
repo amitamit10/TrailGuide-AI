@@ -29,12 +29,23 @@ category must be one of: food, attraction, transport, hotel, flight, free
 Use real coordinates for the destination city."""
 
 
+class ActivityRef(BaseModel):
+    title: str = Field(default="", max_length=300)
+    start_time: Optional[str] = Field(default="?", max_length=10)
+    end_time: Optional[str] = Field(default="?", max_length=10)
+    duration_minutes: Optional[int] = Field(default=60, ge=0, le=1440)
+
+class NeighborRef(BaseModel):
+    title: str = Field(default="", max_length=300)
+    start_time: Optional[str] = Field(default="?", max_length=10)
+    end_time: Optional[str] = Field(default="?", max_length=10)
+
 class PreviewReplaceRequest(BaseModel):
     destination: str = Field(..., max_length=300)
     travelStyle: Optional[str] = Field(default="balanced", max_length=50)
     interests: Optional[List[str]] = Field(default=[], max_length=20)
-    activity: dict
-    neighbors: Optional[List[dict]] = Field(default=[], max_length=20)
+    activity: ActivityRef
+    neighbors: Optional[List[NeighborRef]] = Field(default=[], max_length=20)
     userRequest: str = Field(..., max_length=1000)
 
 
@@ -42,7 +53,7 @@ class PreviewReplaceRequest(BaseModel):
 async def preview_replace(req: PreviewReplaceRequest):
     groq = get_groq()
     neighbor_lines = "\n".join(
-        f"{n.get('start_time','?')} – {n.get('end_time','?')}: {n.get('title','')}"
+        f"{n.start_time or '?'} – {n.end_time or '?'}: {n.title}"
         for n in (req.neighbors or [])
     ) or "None"
 
@@ -51,16 +62,16 @@ Travel style: {req.travelStyle}
 Interests: {', '.join(req.interests or [])}
 
 Activity being replaced:
-Title: {req.activity.get('title', '')}
-Time: {req.activity.get('start_time', '?')} – {req.activity.get('end_time', '?')}
-Duration: {req.activity.get('duration_minutes', 60)} minutes
+Title: {req.activity.title}
+Time: {req.activity.start_time or '?'} – {req.activity.end_time or '?'}
+Duration: {req.activity.duration_minutes or 60} minutes
 
 Other activities this day:
 {neighbor_lines}
 
 User request: "{req.userRequest}"
 
-Generate a replacement that fits the {req.activity.get('start_time', '?')} – {req.activity.get('end_time', '?')} time slot."""
+Generate a replacement that fits the {req.activity.start_time or '?'} – {req.activity.end_time or '?'} time slot."""
 
     completion = await groq.chat.completions.create(
         model="llama-3.3-70b-versatile",

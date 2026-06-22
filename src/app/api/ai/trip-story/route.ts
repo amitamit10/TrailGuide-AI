@@ -30,6 +30,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "activities must be an array (max 200)" }, { status: 400 });
   }
 
+  // Validate and sanitize each activity object to prevent prompt inflation.
+  const sanitizedActivities = (activities as Array<{ title?: unknown; description?: unknown; day?: unknown }>)
+    .map((a) => ({
+      title: typeof a.title === "string" ? a.title.slice(0, 200) : "",
+      description: typeof a.description === "string" ? a.description.slice(0, 500) : undefined,
+      day: typeof a.day === "number" ? a.day : 0,
+    }))
+    .filter((a) => a.title.length > 0);
+
   // Try Go backend when configured
   const { data: { session } } = await supabase.auth.getSession();
   if (session?.access_token) {
@@ -37,7 +46,7 @@ export async function POST(req: NextRequest) {
     if (proxied) return proxied;
   }
 
-  const activityList = (activities as { title: string; description?: string; day: number }[])
+  const activityList = sanitizedActivities
     .map((a) => `Day ${a.day}: ${a.title}${a.description ? ` — ${a.description}` : ""}`)
     .join("\n");
 
