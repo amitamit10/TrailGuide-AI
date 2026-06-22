@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 import type { Activity } from "@/types";
 import { PhotoLightbox } from "@/components/ui/PhotoLightbox";
+import { PhotoUpload } from "@/components/photos/PhotoUpload";
+import { PhotoThumbnails } from "@/components/photos/PhotoThumbnails";
 
 function ActivityPhoto({ query, title }: { query?: string | null; title: string }) {
   const [failed, setFailed] = useState(false);
@@ -60,11 +62,14 @@ interface ActivityCardProps {
   isLast?: boolean;
   onReplace?: () => void;
   onToggleComplete?: (id: string, completed: boolean) => void;
+  tripId?: string;
+  destination?: string;
 }
 
-export function ActivityCard({ activity, isLast, onReplace, onToggleComplete }: ActivityCardProps) {
+export function ActivityCard({ activity, isLast, onReplace, onToggleComplete, tripId, destination }: ActivityCardProps) {
   const meta = CATEGORY_META[activity.category] ?? CATEGORY_META.attraction;
   const Icon = meta.icon;
+  const [photoRefreshKey, setPhotoRefreshKey] = useState(0);
 
   return (
     <div className="flex gap-4">
@@ -147,6 +152,19 @@ export function ActivityCard({ activity, isLast, onReplace, onToggleComplete }: 
             <span>{activity.duration_minutes} min</span>
           )}
         </div>
+
+        {tripId && destination && (
+          <div className="mt-2" onClick={(e) => e.stopPropagation()}>
+            <PhotoThumbnails key={photoRefreshKey} activityId={activity.id} />
+            <PhotoUpload
+              activityId={activity.id}
+              tripId={tripId}
+              activityTitle={activity.title}
+              destination={destination}
+              onUploaded={() => setPhotoRefreshKey((k) => k + 1)}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

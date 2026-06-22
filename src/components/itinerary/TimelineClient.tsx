@@ -20,9 +20,11 @@ function formatDate(dateStr: string) {
 
 export function TimelineClient({
   tripId,
+  destination,
   days,
 }: {
   tripId: string;
+  destination: string;
   days: Array<ItineraryDay & { activities: Activity[] }>;
 }) {
   const router = useRouter();
@@ -72,6 +74,8 @@ export function TimelineClient({
                     isLast={i === day.activities.length - 1}
                     onReplace={() => setSelected({ activity, dayId: day.id })}
                     onToggleComplete={handleToggle}
+                    tripId={tripId}
+                    destination={destination}
                   />
                 </div>
               ))}
