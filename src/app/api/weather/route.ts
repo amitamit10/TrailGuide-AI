@@ -1,12 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
+import { publicRatelimit, clientIp } from "@/lib/ratelimit";
 
 export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const lat = searchParams.get("lat");
-  const lng = searchParams.get("lng");
+  const { success } = await publicRatelimit.limit(clientIp(req));
+  if (!success) {
+    return NextResponse.json(
+      { error: "Too many requests" },
+      { status: 429, headers: { "Retry-After": "60" } }
+    );
+  }
 
-  if (!lat || !lng) {
-    return NextResponse.json({ error: "lat and lng required" }, { status: 400 });
+  const { searchParams } = new URL(req.url);
+  const lat = Number(searchParams.get("lat"));
+  const lng = Number(searchParams.get("lng"));
+
+  if (
+    !Number.isFinite(lat) || !Number.isFinite(lng) ||
+    lat < -90 || lat > 90 || lng < -180 || lng > 180
+  ) {
+    return NextResponse.json({ error: "valid lat and lng required" }, { status: 400 });
   }
 
   try {

@@ -1,6 +1,7 @@
 export const maxDuration = 30;
 
 import { NextRequest, NextResponse } from "next/server";
+import { publicRatelimit, clientIp } from "@/lib/ratelimit";
 
 const DESTINATION_RE = /^[A-Za-z\s,'\-]{1,100}$/;
 
@@ -15,6 +16,14 @@ function safeSourceUrl(url: unknown): string {
 }
 
 export async function GET(req: NextRequest) {
+  const { success } = await publicRatelimit.limit(clientIp(req));
+  if (!success) {
+    return NextResponse.json(
+      { error: "Too many requests" },
+      { status: 429, headers: { "Retry-After": "60" } }
+    );
+  }
+
   const raw = req.nextUrl.searchParams.get("destination");
   if (!raw) return NextResponse.json({ error: "destination required" }, { status: 400 });
 
