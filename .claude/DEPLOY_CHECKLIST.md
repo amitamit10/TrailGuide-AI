@@ -2,7 +2,7 @@
 
 ## 1. Supabase — Run All Migrations
 
-Run every migration file in the Supabase SQL editor (Dashboard → SQL Editor) in order:
+Run all migration files in order via Supabase SQL Editor (Dashboard → SQL Editor):
 
 - `supabase/migrations/001_initial_schema.sql`
 - `supabase/migrations/002_phase4_columns.sql`
@@ -12,43 +12,48 @@ Run every migration file in the Supabase SQL editor (Dashboard → SQL Editor) i
 - `supabase/migrations/006_activity_photos.sql`
 - `supabase/migrations/007_culture_currency_cache.sql`
 
-"Already exists" warnings are fine — all migrations use `IF NOT EXISTS` guards.
+"Already exists" warnings are fine — migrations use `IF NOT EXISTS` guards.
 
-## 2. Supabase Storage
+## 2. Supabase Storage — Create Bucket
 
-Create the `activity-photos` bucket:
-- Storage → New bucket → Name: `activity-photos` → Public: **ON**
+In Supabase Dashboard → Storage → New bucket:
+- **Name:** `activity-photos`
+- **Public:** ON (required for thumbnail URLs)
 
-Public is required so thumbnail URLs (`/storage/v1/object/public/...`) resolve without authentication.
+## 3. Environment Variables
 
-## 3. Environment Variables (Vercel)
-
-Add all of these in Vercel → Settings → Environment Variables (Production + Preview + Development):
+Add all of these to Vercel → Settings → Environment Variables (Production + Preview + Development):
 
 ```
-# Required
+# Supabase
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
+
+# AI
 GROQ_API_KEY=
 TAVILY_API_KEY=
+
+# Photos (optional but recommended)
+UNSPLASH_ACCESS_KEY=
+
+# Notifications
 RESEND_API_KEY=
 CRON_SECRET=
-
-# Recommended
-UNSPLASH_ACCESS_KEY=
-UPSTASH_REDIS_REST_URL=
-UPSTASH_REDIS_REST_TOKEN=
 
 # Telegram (optional)
 TELEGRAM_BOT_TOKEN=
 NEXT_PUBLIC_TELEGRAM_BOT_USERNAME=TrailGuideAI_bot
 TELEGRAM_WEBHOOK_SECRET=
 
-# Go backend (if deployed)
+# Rate limiting (recommended)
+UPSTASH_REDIS_REST_URL=
+UPSTASH_REDIS_REST_TOKEN=
+
+# Go backend (if deploying)
 BACKEND_URL=https://your-go-backend.railway.app
 
-# Production
+# Production URL
 NEXT_PUBLIC_SITE_URL=https://yourapp.vercel.app
 ```
 
@@ -60,13 +65,14 @@ In Supabase Dashboard → Authentication → URL Configuration:
 
 ## 5. Register the Telegram Webhook
 
-After deploying, run this once in a browser or curl:
+After deploying, run this once (browser or curl):
 
 ```
-https://api.telegram.org/bot<TELEGRAM_BOT_TOKEN>/setWebhook?url=https://yourapp.vercel.app/api/telegram/webhook&secret_token=<TELEGRAM_WEBHOOK_SECRET>
+https://api.telegram.org/bot<TOKEN>/setWebhook?url=https://yourapp.vercel.app/api/telegram/webhook&secret_token=<TELEGRAM_WEBHOOK_SECRET>
 ```
 
-Replace `<TELEGRAM_BOT_TOKEN>`, `yourapp.vercel.app`, and `<TELEGRAM_WEBHOOK_SECRET>` with real values.
+Replace `<TOKEN>`, `yourapp.vercel.app`, and `<TELEGRAM_WEBHOOK_SECRET>` with real values.
+The `secret_token` param enables webhook verification. After this, `scripts/telegram-poll.mjs` is no longer needed.
 
 ## 6. Google OAuth (if using Sign in with Google)
 
@@ -75,63 +81,43 @@ In Google Cloud Console → OAuth 2.0 → Authorized redirect URIs, add:
 https://yourapp.vercel.app/auth/callback
 ```
 
-## 7. Deploy Go Backend (optional)
+## 7. Cron Jobs (automatic)
+
+Vercel reads `vercel.json` and registers crons automatically on deploy.
+Verify: Vercel Dashboard → Project → Settings → Cron Jobs
+
+Expected cron jobs:
+- `advance-trip-status` — 6am daily
+- `daily-briefing` — 7am daily
+- `pre-trip-reminder` — 8am daily
+
+## 8. (Optional) Deploy Go Backend + Python AI Service
+
+Both services have Dockerfiles and can be deployed to Railway:
 
 ```bash
-# Railway CLI
-npm install -g @railway/cli
-railway login
-cd backend
-railway up
+# From repo root
+railway init
+# Then set service root dirs per Railway service:
+# - Go: backend/
+# - Python: ai-service/
 ```
 
-Set these env vars in Railway for the Go service:
-```
-DATABASE_URL=postgresql://...  (from Supabase → Settings → Database → URI)
-SUPABASE_JWT_SECRET=           (from Supabase → Settings → API → JWT Secret)
-INTERNAL_API_SECRET=           (random 32-char string, same as Python service)
-AI_SERVICE_URL=                (Railway URL of your Python service)
-CORS_ALLOW_ORIGIN=https://yourapp.vercel.app
-```
+Set the backend env vars listed in `docs/env-vars.md` in each Railway service.
+After deploying, add `BACKEND_URL=https://your-go-service.railway.app` to Vercel.
 
-## 8. Deploy Python AI Service (optional)
-
-```bash
-cd ai-service
-railway up
-```
-
-Set these env vars in Railway for the Python service:
-```
-GROQ_API_KEY=
-TAVILY_API_KEY=
-UNSPLASH_ACCESS_KEY=
-INTERNAL_API_SECRET=  (same value as Go service)
-```
-
-## 9. Smoke Test Before Announcing
+## 9. Test Before Announcing
 
 - [ ] Sign up / log in works (email + Google OAuth)
-- [ ] Create a trip end-to-end (wizard → review → timeline)
+- [ ] Create a trip end-to-end (wizard → review → save → timeline)
 - [ ] Timeline shows activities with place photos
-- [ ] Photo upload on an activity card works
+- [ ] Photo upload works (activity photo → AI caption → thumbnail)
 - [ ] Discover tab loads AI recommendations
 - [ ] Companion tab shows weather + nudges
-- [ ] Budget tab: add and delete an expense
-- [ ] Pack tab: AI packing list generates, items can be checked
-- [ ] Info tab: culture pack loads for the destination
-- [ ] Summary tab: AI story generates, share link works
-- [ ] Export: PDF, ICS, and PNG download
-- [ ] Explore page: public trips appear, clone works
+- [ ] Expenses tab — add expense, export CSV
+- [ ] Pack tab — generate packing list, toggle items, visa card
+- [ ] Info tab — culture pack, currency converter
+- [ ] Summary tab — trip story, share link, PNG export
+- [ ] Explore page — community trips visible, Clone works
 - [ ] Telegram bot responds to /start, /trip, /next, /status
-- [ ] Activity location links open Google Maps
-
-## 10. Cron Jobs (automatic after Vercel deploy)
-
-Vercel reads `vercel.json` and registers the crons automatically on deploy.
-Verify they appear at: Vercel Dashboard → Project → Settings → Cron Jobs
-
-The three crons are:
-- `advance-trip-status` — 6am
-- `daily-briefing` — 7am
-- `pre-trip-reminder` — 8am
+- [ ] Cron jobs appear in Vercel → Cron Jobs settings
