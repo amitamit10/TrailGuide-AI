@@ -26,13 +26,13 @@ The bot needs to know which Supabase user corresponds to a Telegram chat. The li
 5. App calls `POST /api/telegram/link` → saves `telegram_chat_id` to their profile
 6. Bot commands now work
 
-This is a paste-based flow — no deep-link or token exchange. It's simpler and works even if the Telegram app doesn't pass parameters correctly.
+`telegram_chat_id` is UNIQUE in the database — it cannot be claimed by a second account once linked. A user can only be linked from their own session.
 
 ---
 
 ## Local Development
 
-Telegram bots require a public HTTPS URL for webhooks. In development:
+Telegram bots require a public HTTPS URL for webhooks. In development, use the included polling script instead:
 
 1. Start the Next.js dev server:
    ```bash
@@ -52,18 +52,39 @@ This script long-polls the Telegram Bot API and forwards each update to `http://
 
 ## Production Setup
 
-In production (Vercel), register the webhook once after deploying:
+### 1. Register the webhook
+
+After deploying, run this once (browser or `curl`):
 
 ```
-https://api.telegram.org/bot<TOKEN>/setWebhook?url=https://your-app.vercel.app/api/telegram/webhook
+https://api.telegram.org/bot<TOKEN>/setWebhook?url=https://your-app.vercel.app/api/telegram/webhook&secret_token=<TELEGRAM_WEBHOOK_SECRET>
 ```
 
-Replace `<TOKEN>` with your bot token. Open this URL in a browser or `curl` it — Telegram will confirm webhook registration.
+Replace `<TOKEN>`, `your-app.vercel.app`, and `<TELEGRAM_WEBHOOK_SECRET>` with real values. The `secret_token` parameter enables webhook request verification — Telegram will include it as `X-Telegram-Bot-Api-Secret-Token` on every update, and the app verifies it using `crypto.timingSafeEqual`.
 
-To verify the webhook is active:
+### 2. Verify the webhook is active
+
 ```
 https://api.telegram.org/bot<TOKEN>/getWebhookInfo
 ```
+
+### 3. Set the command list (optional, shows in Telegram's `/` menu)
+
+Send `/setcommands` to [@BotFather](https://t.me/BotFather), then paste:
+```
+start - Get your Chat ID for account linking
+trip - List your upcoming trips
+next - Show your next activity
+status - Show today's remaining activities
+```
+
+---
+
+## Security
+
+- **Webhook secret:** `TELEGRAM_WEBHOOK_SECRET` is compared using `crypto.timingSafeEqual` to prevent timing attacks. Set `TELEGRAM_WEBHOOK_SECRET` in your environment and pass the same value as `secret_token` when registering the webhook. Without this, forged webhook calls are not rejected.
+- **Service role client:** The webhook handler uses `createServiceClient()` (bypasses RLS) because it runs outside any user session. This is intentional and safe — the handler only reads profiles by `telegram_chat_id`, never writes arbitrary data.
+- **Middleware bypass:** `/api/telegram/webhook` and `/api/cron/*` are excluded from the session middleware (`isServiceRoute`) so they receive unauthenticated requests as expected.
 
 ---
 
@@ -72,12 +93,13 @@ https://api.telegram.org/bot<TOKEN>/getWebhookInfo
 **File:** `src/app/api/telegram/webhook/route.ts`
 
 - Uses **grammy** v1 for bot logic
-- Uses `createServiceClient()` (service role) to bypass RLS when reading profiles — the webhook runs outside any user session, so `createClient()` would always see an anon user and RLS would block all reads
+- Uses `createServiceClient()` (service role) to bypass RLS
 - Bot profile lookup: `profiles.telegram_chat_id = ctx.chat.id.toString()`
+- Webhook secret verified with `crypto.timingSafeEqual` before grammy processes the update
 
 **File:** `src/app/api/telegram/link/route.ts`
 
-- Uses `createClient()` (session-based) — the user is authenticated when they paste the Chat ID
+- Uses `createClient()` (session-based) — user is authenticated when they paste the Chat ID
 - Validates Chat ID is numeric before saving
 - `PATCH profiles SET telegram_chat_id = $1 WHERE id = auth.uid()`
 
@@ -88,16 +110,5 @@ https://api.telegram.org/bot<TOKEN>/getWebhookInfo
 1. Open Telegram and message [@BotFather](https://t.me/BotFather)
 2. Send `/newbot`
 3. Follow the prompts — choose a name and username (e.g. `TrailGuideAI_bot`)
-4. Copy the bot token and add it to `.env.local` as `TELEGRAM_BOT_TOKEN`
-
-To set the command list (shows in Telegram's `/` menu):
-```
-/setcommands
-```
-Then paste:
-```
-start - Get your Chat ID for account linking
-trip - List your upcoming trips
-next - Show your next activity
-status - Show today's remaining activities
-```
+4. Copy the bot token → add to `.env.local` as `TELEGRAM_BOT_TOKEN`
+5. Also add `NEXT_PUBLIC_TELEGRAM_BOT_USERNAME=TrailGuideAI_bot` for the in-app link
