@@ -197,43 +197,64 @@ scripts/                    # Local dev utilities
 
 ---
 
-## Claude Code Agent Setup
+## AI Agent
 
-This repo is configured for autonomous development with [Claude Code](https://claude.ai/code). The setup covers context loading, running the app for verification, and keeping sessions efficient.
+TrailGuide AI is built around a Groq-powered agent that helps plan, adapt, and narrate your trip — and keeps you updated via Telegram while you travel.
 
-### Context loading
+### Groq (the brain)
 
-`CLAUDE.md` (repo root) is read at the start of every Claude Code session. It `@`-imports the following files, so the agent knows the full architecture, phase status, and conventions without reading any files mid-task:
+All LLM work runs through [Groq](https://console.groq.com) using two models:
 
-| File | What it gives the agent |
+| Model | Used for |
 |---|---|
-| `AGENTS.md` | Which service owns what, auth patterns, security conventions |
-| `CHANGELOG.md` | Phase status and full build history |
-| `.claude/AFTER_EACH_PHASE.md` | Post-phase checklist (run automatically after completing a phase) |
-| `.claude/DEPLOY_CHECKLIST.md` | Deploy steps |
-| `.claude/TOKEN_EFFICIENCY.md` | Rules for keeping context lean (Grep before Read, batch calls, etc.) |
-| `docs/env-vars.md` | All env var names and where to find their values |
-| `docs/architecture.md` | DB schema, service boundaries, AI pipeline |
+| `llama-3.3-70b-versatile` | Itinerary generation, editing, recommendations, culture packs, packing lists, trip stories |
+| `llama-3.1-8b-instant` | Fast tasks: photo captions, companion nudges |
 
-### Running the app to verify changes
+The agent has several modes depending on what stage of the trip you're in:
 
-Because this is a three-service app, the agent uses the minimum set of services needed for the change being tested. The project `/run` skill (`.claude/commands/run.md`) documents exactly which services to start and how to verify each layer:
+**Before the trip — Planning agent**
+- Generates a full day-by-day itinerary from an 8-step wizard (destination, dates, style, interests, transport, budget)
+- Edits the itinerary via natural language commands ("move the museum to day 3")
+- Suggests nearby alternatives for any activity
+- Builds a weather-aware packing list
+- Generates a culture pack: local phrases, customs, emergency numbers, visa summary
 
-| What changed | Services to start |
+**During the trip — Companion agent**
+- Streams a live AI chat companion with trip context baked into every message
+- Suggests what to do next based on current time and location
+- Proactively pushes daily briefings via Telegram each morning
+
+**After the trip — Memory agent**
+- Writes a 2–3 paragraph travel narrative from your completed activities
+- Generates captions for uploaded photos
+
+### Telegram (the notification channel)
+
+The Telegram bot (`@TrailGuideAI_bot`) is the agent's async interface — it reaches you without needing the app open.
+
+**Commands:**
+
+| Command | What it does |
 |---|---|
-| Next.js UI or a Next.js API route | Next.js only (`npm run dev` → port 3000) |
-| Go handler in `backend/` | Next.js + Go (`go run main.go` → port 8080) |
-| Python AI router in `ai-service/` | All three (add `uvicorn main:app` → port 8081) |
+| `/start` | Returns your Chat ID for account linking |
+| `/trip` | Lists your upcoming trips |
+| `/next` | Shows the next scheduled activity on your active trip |
+| `/status` | Shows all remaining activities for today |
 
-Use `/run` in any Claude Code session to launch and browser-verify the app.
+**Scheduled pushes (cron jobs):**
 
-### Branch workflow
+| Time | What gets sent |
+|---|---|
+| 7am daily | Telegram briefing with today's full activity list (active trips only) |
+| 8am daily | Email reminder via Resend — 3 days and 1 day before trip start |
+| 6am daily | Automatic trip status transitions: `planning → active → completed` |
 
-Each task runs on an isolated branch (e.g. `claude/feature-name-abc123`). The agent commits and pushes there; a PR is only created when explicitly asked. Nothing goes directly to `main`.
+**Linking your account:**
+1. Message the bot → `/start` → copy your Chat ID
+2. Open the app → Settings → paste Chat ID → Save
+3. Bot commands and morning briefings now work
 
-### Extending the setup
-
-To make future agents aware of a new convention — add a file to `.claude/` or `docs/`, then add an `@` line for it in `CLAUDE.md`. It will be injected into every session from that point on.
+See [`docs/telegram-bot.md`](docs/telegram-bot.md) for setup and local dev instructions.
 
 | Doc | What's in it |
 |-----|-------------|
