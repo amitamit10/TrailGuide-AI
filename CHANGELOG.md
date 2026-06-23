@@ -132,6 +132,19 @@ Groups define the recommended execution order. Within a group, phases listed as 
 
 ## Changelog
 
+### 2026-06-23
+
+**Documentation refresh — all core MD files updated**
+- `README.md` — reflects full feature set (budget, packing, culture, photo journal, social, notifications, export), updated tech stack (Go + Python + Next.js), all 7 migrations, updated project structure with all trip tabs and new service directories
+- `docs/architecture.md` — complete rewrite: added all new DB tables (expenses, checklist_items, activity_photos, culture_cache, currency_cache), full service architecture section (Go backend, Python AI service), updated key-directories listing, updated AI and photo pipeline docs
+- `docs/api-reference.md` — added all routes missing from original (expenses, checklist, photos, culture-pack, currency, visa, social clone/visibility, cron jobs, Go v1 routes); added request/response shapes for all new endpoints; added input validation and auth notes
+- `docs/env-vars.md` — moved RESEND_API_KEY + CRON_SECRET out of "future" and into Required; added UPSTASH_REDIS_REST_URL/TOKEN, TELEGRAM_WEBHOOK_SECRET, CORS_ALLOW_ORIGIN, BACKEND_URL, INTERNAL_API_SECRET, AI_SERVICE_URL, Python AI service vars; updated .env.local.example
+- `docs/telegram-bot.md` — added TELEGRAM_WEBHOOK_SECRET setup (webhook secret_token parameter), constant-time verification note, middleware bypass explanation; expanded security section
+- `AGENTS.md` — expanded from Next.js-only warning into full multi-service architecture guide: service ownership table, input validation layers, auth patterns, security conventions, migration guidance
+- `SUDO_COMMANDS.md` — reordered sections, added Python AI service first-time setup, cleaned up structure, removed stale content
+- `.claude/DEPLOY_CHECKLIST.md` — updated to include all 7 migrations, Storage bucket creation, all env vars (including new ones), Go + Python Railway deploy steps, expanded smoke test checklist
+- `DEPLOY_CHECKLIST.md` (new root file) — comprehensive standalone deploy guide with all steps, env vars, quick reference table
+
 ### 2026-06-22 (continued)
 
 **Phase 21 — Photo Journal ✅ Done**

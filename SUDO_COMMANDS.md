@@ -1,10 +1,10 @@
-# Sudo Commands — Run These When You're Back
+# Sudo Commands — Local Environment Setup
 
 Run these in order. Each section explains what it unlocks.
 
 ---
 
-## 1. Install Go 1.22 (unblocks Phase 16 — Go backend)
+## 1. Install Go 1.22 (required for the Go backend)
 
 ```bash
 # Download Go 1.22
@@ -23,11 +23,12 @@ go version
 # Expected: go version go1.22.5 linux/amd64
 ```
 
-After Go is installed, run the backend:
+After Go is installed, start the backend:
+
 ```bash
-cd "/home/amit/travel app/backend"
+cd TrailGuide-AI/backend
 cp .env.example .env
-# Fill in DATABASE_URL, SUPABASE_JWT_SECRET, INTERNAL_API_SECRET, TELEGRAM_BOT_TOKEN
+# Fill in DATABASE_URL, SUPABASE_JWT_SECRET, INTERNAL_API_SECRET, AI_SERVICE_URL
 go mod tidy
 go run main.go
 # Expected: "database connected" then "Listening and serving HTTP on :8080"
@@ -35,7 +36,22 @@ go run main.go
 
 ---
 
-## 2. Install Docker (unblocks Phase 19 — containerisation)
+## 2. Python AI Service — First-Time Setup
+
+```bash
+cd TrailGuide-AI/ai-service
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+# Fill in GROQ_API_KEY, TAVILY_API_KEY, UNSPLASH_ACCESS_KEY, INTERNAL_API_SECRET
+uvicorn main:app --port 8081 --reload
+# Expected: "Uvicorn running on http://0.0.0.0:8081"
+```
+
+---
+
+## 3. Install Docker (optional — containerised local dev)
 
 ```bash
 # Add Docker's official GPG key and repo
@@ -56,74 +72,82 @@ docker --version
 docker compose version
 ```
 
+Then start all three services at once:
+```bash
+cd TrailGuide-AI
+docker compose up
+```
+
 ---
 
-## 3. New env vars to add to .env.local and Vercel
-
-After Phase 16 and 17 are built, add these to `.env.local` AND Vercel env vars:
+## 4. backend/.env (not committed — local only)
 
 ```bash
-# Go backend URL (local dev)
-NEXT_PUBLIC_API_URL=http://localhost:8080
-
-# Python AI service URL (local dev)
-NEXT_PUBLIC_AI_URL=http://localhost:8081
-```
-
-For backend/.env (NOT committed, local only):
-```
 DATABASE_URL=postgresql://postgres:[PASSWORD]@db.nlqxnaktnvfomrcjlxmo.supabase.co:5432/postgres
-SUPABASE_JWT_SECRET=<from Supabase Dashboard → Settings → API → JWT Secret>
+SUPABASE_JWT_SECRET=<Supabase → Settings → API → JWT Settings → JWT Secret>
 AI_SERVICE_URL=http://localhost:8081
 INTERNAL_API_SECRET=<generate any random 32-char string>
-TELEGRAM_BOT_TOKEN=<your bot token from .env.local>
+CORS_ALLOW_ORIGIN=http://localhost:3000
 PORT=8080
 ```
 
-For ai-service/.env (NOT committed, local only):
-```
+---
+
+## 5. ai-service/.env (not committed — local only)
+
+```bash
+GROQ_API_KEY=<same as .env.local>
+TAVILY_API_KEY=<same as .env.local>
+UNSPLASH_ACCESS_KEY=<same as .env.local>
+INTERNAL_API_SECRET=<same value as backend .env>
 PORT=8081
-GROQ_API_KEY=<from .env.local>
-TAVILY_API_KEY=<from .env.local>
-UNSPLASH_ACCESS_KEY=<from .env.local>
-INTERNAL_API_SECRET=<same value as backend>
 ```
 
 ---
 
-## 4. Where to get SUPABASE_JWT_SECRET
+## 6. .env.local additions (when using Go backend)
 
-Go to: https://supabase.com/dashboard/project/nlqxnaktnvfomrcjlxmo/settings/api
+Add to `.env.local` in the project root AND to Vercel env vars:
 
-Scroll to **JWT Settings** → copy the **JWT Secret** (not the anon key — the actual JWT secret).
+```bash
+BACKEND_URL=http://localhost:8080
+```
 
 ---
 
-## 5. Install Railway CLI (deploys Go + Python to production — no sudo needed)
+## 7. Where to find SUPABASE_JWT_SECRET
+
+Go to: [supabase.com/dashboard/project/nlqxnaktnvfomrcjlxmo/settings/api](https://supabase.com/dashboard/project/nlqxnaktnvfomrcjlxmo/settings/api)
+
+Scroll to **JWT Settings** → copy the **JWT Secret** (not the anon key).
+
+---
+
+## 8. Install Railway CLI (deploys Go + Python to production)
 
 ```bash
 npm install -g @railway/cli
 railway login
 ```
 
-After login, run from the project root:
+After login, from the project root:
 ```bash
 railway init
 ```
 
 ---
 
-## 6. After everything is installed — start all 3 services together
+## 9. Start All 3 Services Locally
 
 ```bash
 # Terminal 1 — Go backend
-cd "/home/amit/travel app/backend" && go run main.go
+cd TrailGuide-AI/backend && go run main.go
 
 # Terminal 2 — Python AI service
-cd "/home/amit/travel app/ai-service" && source .venv/bin/activate && uvicorn main:app --port 8081 --reload
+cd TrailGuide-AI/ai-service && source .venv/bin/activate && uvicorn main:app --port 8081 --reload
 
 # Terminal 3 — Next.js frontend
-cd "/home/amit/travel app" && export NVM_DIR="$HOME/.nvm" && . "$NVM_DIR/nvm.sh" && npm run dev
+cd TrailGuide-AI && npm run dev
 ```
 
-Then open http://localhost:3000 — should work end-to-end through Go + Python.
+Open [http://localhost:3000](http://localhost:3000) — full stack running through Go + Python when `BACKEND_URL` is set.

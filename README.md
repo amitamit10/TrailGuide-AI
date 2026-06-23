@@ -11,42 +11,64 @@ AI-powered travel planner that generates personalised itineraries, tracks your t
 | **Trip Wizard** | 8-step wizard: destination, dates, travelers, style, interests, transport mode, flights/hotels |
 | **AI Itinerary** | Groq (llama-3.3-70b-versatile) generates a full day-by-day plan with times, costs, and photos |
 | **Timeline** | Chronological activity view with check-off, replace, and Google Maps links |
+| **Photo Journal** | Upload photos per activity; AI generates captions; photos appear in the summary mosaic |
 | **Discover** | AI recommends nearby places not in your itinerary — add them with one tap |
 | **Companion** | Live weather, next-activity countdown, and AI nudges while you travel |
-| **Summary** | Post-trip stats, AI travel story, and shareable/downloadable memory card |
+| **Summary** | Post-trip stats, AI travel story, shareable link, and downloadable memory card (PNG) |
+| **Budget Tracker** | Log expenses by category, visualise spending with a budget bar, export to CSV |
+| **Packing List** | AI-generated packing list with weather context; manual add/remove; inline visa requirements |
+| **Language & Culture** | AI culture pack: local phrases, customs, emergency numbers, live currency converter |
+| **Notifications** | Telegram daily briefing, Resend email pre-trip reminders, automatic trip status transitions |
+| **Social / Explore** | Make trips public, share via link, community explore feed, clone others' itineraries |
+| **Export** | Download itinerary as PDF, `.ics` calendar file, or send to Google Calendar |
 | **Telegram Bot** | `/trip`, `/next`, `/status` commands via @TrailGuideAI_bot |
-| **Document Import** | Paste or upload flight/hotel confirmations — AI extracts the details |
+| **Document Import** | Paste flight/hotel confirmations — AI extracts structured data |
 | **Photos** | Real place photos via Wikipedia API, Unsplash fallback |
-| **Public Sharing** | Share any trip via a public link — no login required to view |
 
 ---
 
 ## Tech Stack
 
+### Frontend
 - **Framework:** Next.js 16.2.9 (App Router, Turbopack)
 - **Language:** TypeScript 5, React 19
 - **Styling:** Tailwind CSS v4 (CSS-first config), Plus Jakarta Sans font
+- **Maps:** Leaflet + OpenStreetMap (no API key), Google Maps deep-links for navigation
+- **Export:** html2canvas (PNG), jsPDF (PDF), iCalendar (`.ics`)
+
+### Backend
+- **API Server:** Go 1.22 (Gin) — trip CRUD, JWT auth middleware, AI proxy to Python service
+- **AI Service:** Python 3.12 (FastAPI) — all LLM logic (Groq), document parsing, place photos, weather
 - **Auth + DB:** Supabase (PostgreSQL + RLS + Auth)
+- **Rate Limiting:** Upstash Redis (`@upstash/ratelimit`)
+
+### AI & External APIs
 - **AI:** Groq SDK — `llama-3.3-70b-versatile` for planning, `llama-3.1-8b-instant` for fast tasks
-- **Search:** Tavily API (web search for recommendations)
+- **Search:** Tavily API (web search for recommendations and visa info)
 - **Photos:** Wikipedia API (free, no key) + Unsplash API (fallback)
-- **Telegram:** grammy v1 webhook handler
-- **Maps:** Leaflet + OpenStreetMap (no API key needed), Google Maps deep-links for navigation
 - **Weather:** Open-Meteo (free, no key needed)
-- **Export:** html2canvas (summary card PNG download)
+- **Currency:** open.er-api.com (free, no key needed)
+- **Email:** Resend (pre-trip reminders)
+- **Telegram:** grammy v1 webhook handler
 
 ---
 
 ## Local Setup
 
+> The full stack runs three services: Next.js frontend, Go backend, and Python AI service.
+> For a quick frontend-only start (reduced AI functionality), skip steps 5–6.
+
 ### Prerequisites
 
-- Node.js 18+ via [nvm](https://github.com/nvm-sh/nvm)
+- Node.js 20+ via [nvm](https://github.com/nvm-sh/nvm)
+- Go 1.22+ (`go version`)
+- Python 3.12+ (`python3 --version`)
 - A [Supabase](https://supabase.com) project
 - A [Groq](https://console.groq.com) API key
 - A [Tavily](https://tavily.com) API key
 - An [Unsplash](https://unsplash.com/developers) Access Key (optional)
 - A Telegram bot token from [@BotFather](https://t.me/BotFather) (optional)
+- An [Upstash](https://console.upstash.com) Redis database (optional — for rate limiting)
 
 ### 1. Clone and install
 
@@ -67,18 +89,25 @@ Fill in the values — see [`docs/env-vars.md`](docs/env-vars.md) for details on
 
 ### 3. Set up Supabase
 
-In **Supabase Dashboard → SQL Editor**, run in order:
+In **Supabase Dashboard → SQL Editor**, run all migrations in order:
 
 ```
 supabase/migrations/001_initial_schema.sql
 supabase/migrations/002_phase4_columns.sql
+supabase/migrations/003_expenses.sql
+supabase/migrations/004_checklist.sql
+supabase/migrations/005_public_trips.sql
+supabase/migrations/006_activity_photos.sql
+supabase/migrations/007_culture_currency_cache.sql
 ```
 
-Then in **Authentication → URL Configuration**:
+In **Authentication → URL Configuration**:
 - Site URL: `http://localhost:3000`
 - Redirect URLs: `http://localhost:3000/**`
 
-### 4. Run the dev server
+In **Storage**: create an `activity-photos` bucket (Public: ON).
+
+### 4. Start the Next.js frontend
 
 ```bash
 npm run dev
@@ -86,13 +115,37 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-### 5. (Optional) Telegram bot — local testing
+### 5. Start the Go backend
+
+```bash
+cd backend
+cp .env.example .env
+# Fill in DATABASE_URL, SUPABASE_JWT_SECRET, INTERNAL_API_SECRET, AI_SERVICE_URL
+go mod tidy
+go run main.go
+# Listening on :8080
+```
+
+### 6. Start the Python AI service
+
+```bash
+cd ai-service
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+# Fill in GROQ_API_KEY, TAVILY_API_KEY, UNSPLASH_ACCESS_KEY, INTERNAL_API_SECRET
+uvicorn main:app --port 8081 --reload
+# Listening on :8081
+```
+
+### 7. (Optional) Telegram bot — local polling
 
 ```bash
 node scripts/telegram-poll.mjs
 ```
 
-Long-polls Telegram and forwards updates to `localhost:3000/api/telegram/webhook`. See [`docs/telegram-bot.md`](docs/telegram-bot.md).
+Long-polls Telegram and forwards updates to `localhost:3000/api/telegram/webhook`. No ngrok needed. See [`docs/telegram-bot.md`](docs/telegram-bot.md).
 
 ---
 
@@ -103,30 +156,43 @@ src/
 ├── app/
 │   ├── (app)/              # Authenticated routes
 │   │   ├── dashboard/      # Trip list
+│   │   ├── explore/        # Community itineraries feed
 │   │   ├── settings/       # Account + Telegram link
 │   │   └── trips/
 │   │       ├── new/        # 8-step wizard
 │   │       ├── review/     # Pre-save itinerary review
 │   │       └── [id]/       # Per-trip tabs
-│   │           ├── timeline/
-│   │           ├── companion/
-│   │           ├── discover/
-│   │           ├── summary/
-│   │           ├── calendar/
-│   │           ├── map/
-│   │           └── import/
+│   │           ├── timeline/   # Activities + photo journal
+│   │           ├── companion/  # Live AI companion + weather
+│   │           ├── discover/   # AI recommendations
+│   │           ├── summary/    # Stats + story + export + share
+│   │           ├── calendar/   # Calendar view
+│   │           ├── map/        # Leaflet map
+│   │           ├── import/     # Document import
+│   │           ├── expenses/   # Budget tracker
+│   │           ├── pack/       # Packing list + visa info
+│   │           └── info/       # Language & culture toolkit
 │   ├── (auth)/             # Login / signup / OAuth callback
-│   ├── api/                # Server-side API routes (AI, photos, Telegram, weather)
+│   ├── api/                # Next.js API routes
 │   └── share/[tripId]/     # Public trip view (no auth required)
 ├── components/             # React components
 ├── lib/
-│   ├── ai.ts               # Groq wrapper (GeminiService class)
+│   ├── ai.ts               # Groq wrapper (GeminiService)
+│   ├── backend-proxy.ts    # Go backend proxy helper
+│   ├── ratelimit.ts        # Upstash rate limiting helpers
 │   └── supabase/           # client.ts + server.ts
 └── types/                  # Shared TypeScript types
+backend/                    # Go 1.22 (Gin) API server
+├── handlers/               # HTTP handlers (trips, AI proxy)
+├── middleware/             # JWT auth middleware
+└── config/                 # Typed env config
+ai-service/                 # Python 3.12 (FastAPI) AI service
+├── routers/                # Route handlers (generate, chat, photos, etc.)
+└── middleware/             # Internal token auth
 supabase/
-└── migrations/             # SQL migration files (run in order)
+└── migrations/             # SQL migration files (001–007, run in order)
 docs/                       # Architecture, API reference, guides
-scripts/                    # Local dev utilities (Telegram polling)
+scripts/                    # Local dev utilities
 ```
 
 ---
@@ -135,11 +201,12 @@ scripts/                    # Local dev utilities (Telegram polling)
 
 | Doc | What's in it |
 |-----|-------------|
-| [`docs/architecture.md`](docs/architecture.md) | DB schema, auth flow, AI pipeline, photo pipeline |
+| [`docs/architecture.md`](docs/architecture.md) | DB schema, auth flow, AI pipeline, Go backend, Python service |
 | [`docs/api-reference.md`](docs/api-reference.md) | All API routes with request/response shapes |
 | [`docs/env-vars.md`](docs/env-vars.md) | Every environment variable and where to get it |
 | [`docs/telegram-bot.md`](docs/telegram-bot.md) | Bot setup, linking flow, commands |
 | [`DEPLOY_CHECKLIST.md`](DEPLOY_CHECKLIST.md) | Step-by-step production deploy guide |
+| [`SUDO_COMMANDS.md`](SUDO_COMMANDS.md) | System-level setup: Go, Docker, env wiring |
 
 ---
 
@@ -147,11 +214,13 @@ scripts/                    # Local dev utilities (Telegram polling)
 
 See [`DEPLOY_CHECKLIST.md`](DEPLOY_CHECKLIST.md) for the full guide. The short version:
 
-1. Run Supabase migrations
-2. Push to GitHub
-3. Import repo in [Vercel](https://vercel.com) → add env vars → deploy
-4. Add production URL to Supabase Redirect URLs
-5. Register Telegram webhook (one browser request)
+1. Run all 7 Supabase migrations
+2. Create the `activity-photos` Storage bucket (Public)
+3. Push to GitHub — Vercel auto-deploys
+4. Add all env vars in Vercel → Settings → Environment Variables
+5. Add production URL to Supabase Redirect URLs
+6. Register the Telegram webhook (one browser request)
+7. (Optional) Deploy Go backend and Python AI service to Railway
 
 ---
 
