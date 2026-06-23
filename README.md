@@ -197,7 +197,35 @@ scripts/                    # Local dev utilities
 
 ---
 
-## Documentation
+## Agent Harness (Claude Code)
+
+This repo is configured for autonomous development with [Claude Code](https://claude.ai/code). The harness auto-loads context at session start and enforces a consistent workflow across sessions.
+
+### How it works
+
+`CLAUDE.md` (repo root) is the harness entry point. Claude Code reads it at the start of every session and `@`-imports the following files into the agent's context:
+
+| File | Purpose |
+|---|---|
+| `AGENTS.md` | Multi-service architecture guide — which service owns what, auth patterns, security conventions |
+| `CHANGELOG.md` | Phase status table and full history — the agent knows what's done and what's planned |
+| `.claude/AFTER_EACH_PHASE.md` | Checklist the agent runs automatically after completing any phase |
+| `.claude/DEPLOY_CHECKLIST.md` | Deploy steps referenced during infrastructure phases |
+| `.claude/TOKEN_EFFICIENCY.md` | Rules for minimising context usage (Grep before Read, batch calls, etc.) |
+| `docs/env-vars.md` | Every env var — the agent knows all variable names without grepping |
+| `docs/architecture.md` | DB schema, service boundaries, API pipeline — loaded upfront to avoid mid-task file reads |
+
+### Branch workflow
+
+The harness runs each task on an isolated feature branch (e.g. `claude/some-task-abc123`). Changes are committed and pushed to that branch; a PR is created when the user asks for one. The agent never pushes directly to `main`.
+
+### Adding new context
+
+To make the agent aware of new conventions without a prompt:
+1. Write the rule in a file under `.claude/` or `docs/`
+2. Add an `@` reference to it in `CLAUDE.md`
+
+It will be injected into every future session automatically.
 
 | Doc | What's in it |
 |-----|-------------|
