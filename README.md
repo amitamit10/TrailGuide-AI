@@ -1,29 +1,54 @@
 # TrailGuide AI ✈️
 
-AI-powered travel planner that generates personalised itineraries, tracks your trip live, and keeps you updated via Telegram.
+**TrailGuide AI is a full-stack AI travel planner.** You describe your trip — destination, dates, travel style, interests — and it builds a complete day-by-day itinerary in seconds. From there it travels with you: live weather, activity nudges, a Telegram bot for quick updates, and a photo journal that turns into a shareable memory card when you get home.
+
+It's built for real trips, not demo apps. The backend is a three-service architecture (Next.js + Go + Python) with Supabase for auth and data, Groq for all AI, and a full suite of trip management tools: budget tracking, packing lists, visa info, currency conversion, local culture guides, document import, and community trip sharing.
 
 ---
 
 ## Features
 
-| Feature | Description |
+### Planning
+| Feature | What it does |
 |---|---|
-| **Trip Wizard** | 8-step wizard: destination, dates, travelers, style, interests, transport mode, flights/hotels |
-| **AI Itinerary** | Groq (llama-3.3-70b-versatile) generates a full day-by-day plan with times, costs, and photos |
-| **Timeline** | Chronological activity view with check-off, replace, and Google Maps links |
-| **Photo Journal** | Upload photos per activity; AI generates captions; photos appear in the summary mosaic |
-| **Discover** | AI recommends nearby places not in your itinerary — add them with one tap |
-| **Companion** | Live weather, next-activity countdown, and AI nudges while you travel |
-| **Summary** | Post-trip stats, AI travel story, shareable link, and downloadable memory card (PNG) |
-| **Budget Tracker** | Log expenses by category, visualise spending with a budget bar, export to CSV |
-| **Packing List** | AI-generated packing list with weather context; manual add/remove; inline visa requirements |
-| **Language & Culture** | AI culture pack: local phrases, customs, emergency numbers, live currency converter |
-| **Notifications** | Telegram daily briefing, Resend email pre-trip reminders, automatic trip status transitions |
-| **Social / Explore** | Make trips public, share via link, community explore feed, clone others' itineraries |
-| **Export** | Download itinerary as PDF, `.ics` calendar file, or send to Google Calendar |
-| **Telegram Bot** | `/trip`, `/next`, `/status` commands via @TrailGuideAI_bot |
-| **Document Import** | Paste flight/hotel confirmations — AI extracts structured data |
-| **Photos** | Real place photos via Wikipedia API, Unsplash fallback |
+| **Trip Wizard** | 8-step setup: destination, dates, travelers, style, interests, transport, flights, hotel |
+| **AI Itinerary** | Generates a full day-by-day plan with activity times, costs, durations, and place photos |
+| **AI Edit** | Reshape the itinerary with a plain-English command ("swap day 2 and 3", "add a cooking class") |
+| **Document Import** | Paste a flight or hotel confirmation — AI extracts the structured details automatically |
+| **Packing List** | AI builds a weather-aware packing list; add/remove items manually; shows visa requirements |
+| **Language & Culture** | Local phrases, customs, electricity, water safety, emergency numbers, visa summary |
+| **Currency Converter** | Live exchange rates with a built-in converter on the culture page |
+
+### During the Trip
+| Feature | What it does |
+|---|---|
+| **Timeline** | Chronological activity view; tap to complete, replace, or open in Google Maps |
+| **Discover** | AI suggests nearby places not in your itinerary — add them with one tap |
+| **Companion** | Live weather, next-activity countdown, and AI nudges based on your current time |
+| **Photo Journal** | Upload photos per activity; AI writes a caption; photos appear in the summary mosaic |
+| **Map View** | All activities on an interactive Leaflet map with OpenStreetMap tiles |
+| **Calendar View** | Day-by-day calendar layout of the full itinerary |
+
+### After the Trip
+| Feature | What it does |
+|---|---|
+| **Summary** | Stats, AI-written travel story, and a shareable memory card |
+| **Export** | Download as PDF, `.ics` calendar file, or send to Google Calendar |
+| **Public Sharing** | Make a trip public — anyone can view it via a link, no login required |
+
+### Budget & Organisation
+| Feature | What it does |
+|---|---|
+| **Budget Tracker** | Log expenses by category; budget bar; export to CSV |
+| **Social / Explore** | Community feed of public trips; clone any trip into your own account |
+
+### Notifications
+| Feature | What it does |
+|---|---|
+| **Telegram Bot** | `/trip`, `/next`, `/status` — check your trip without opening the app |
+| **Morning Briefing** | Telegram message every morning with today's full activity list |
+| **Email Reminders** | Resend email 3 days and 1 day before departure |
+| **Auto Status** | Trip automatically transitions `planning → active → completed` based on dates |
 
 ---
 
