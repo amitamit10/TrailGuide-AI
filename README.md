@@ -197,35 +197,43 @@ scripts/                    # Local dev utilities
 
 ---
 
-## Agent Harness (Claude Code)
+## Claude Code Agent Setup
 
-This repo is configured for autonomous development with [Claude Code](https://claude.ai/code). The harness auto-loads context at session start and enforces a consistent workflow across sessions.
+This repo is configured for autonomous development with [Claude Code](https://claude.ai/code). The setup covers context loading, running the app for verification, and keeping sessions efficient.
 
-### How it works
+### Context loading
 
-`CLAUDE.md` (repo root) is the harness entry point. Claude Code reads it at the start of every session and `@`-imports the following files into the agent's context:
+`CLAUDE.md` (repo root) is read at the start of every Claude Code session. It `@`-imports the following files, so the agent knows the full architecture, phase status, and conventions without reading any files mid-task:
 
-| File | Purpose |
+| File | What it gives the agent |
 |---|---|
-| `AGENTS.md` | Multi-service architecture guide — which service owns what, auth patterns, security conventions |
-| `CHANGELOG.md` | Phase status table and full history — the agent knows what's done and what's planned |
-| `.claude/AFTER_EACH_PHASE.md` | Checklist the agent runs automatically after completing any phase |
-| `.claude/DEPLOY_CHECKLIST.md` | Deploy steps referenced during infrastructure phases |
-| `.claude/TOKEN_EFFICIENCY.md` | Rules for minimising context usage (Grep before Read, batch calls, etc.) |
-| `docs/env-vars.md` | Every env var — the agent knows all variable names without grepping |
-| `docs/architecture.md` | DB schema, service boundaries, API pipeline — loaded upfront to avoid mid-task file reads |
+| `AGENTS.md` | Which service owns what, auth patterns, security conventions |
+| `CHANGELOG.md` | Phase status and full build history |
+| `.claude/AFTER_EACH_PHASE.md` | Post-phase checklist (run automatically after completing a phase) |
+| `.claude/DEPLOY_CHECKLIST.md` | Deploy steps |
+| `.claude/TOKEN_EFFICIENCY.md` | Rules for keeping context lean (Grep before Read, batch calls, etc.) |
+| `docs/env-vars.md` | All env var names and where to find their values |
+| `docs/architecture.md` | DB schema, service boundaries, AI pipeline |
+
+### Running the app to verify changes
+
+Because this is a three-service app, the agent uses the minimum set of services needed for the change being tested. The project `/run` skill (`.claude/commands/run.md`) documents exactly which services to start and how to verify each layer:
+
+| What changed | Services to start |
+|---|---|
+| Next.js UI or a Next.js API route | Next.js only (`npm run dev` → port 3000) |
+| Go handler in `backend/` | Next.js + Go (`go run main.go` → port 8080) |
+| Python AI router in `ai-service/` | All three (add `uvicorn main:app` → port 8081) |
+
+Use `/run` in any Claude Code session to launch and browser-verify the app.
 
 ### Branch workflow
 
-The harness runs each task on an isolated feature branch (e.g. `claude/some-task-abc123`). Changes are committed and pushed to that branch; a PR is created when the user asks for one. The agent never pushes directly to `main`.
+Each task runs on an isolated branch (e.g. `claude/feature-name-abc123`). The agent commits and pushes there; a PR is only created when explicitly asked. Nothing goes directly to `main`.
 
-### Adding new context
+### Extending the setup
 
-To make the agent aware of new conventions without a prompt:
-1. Write the rule in a file under `.claude/` or `docs/`
-2. Add an `@` reference to it in `CLAUDE.md`
-
-It will be injected into every future session automatically.
+To make future agents aware of a new convention — add a file to `.claude/` or `docs/`, then add an `@` line for it in `CLAUDE.md`. It will be injected into every session from that point on.
 
 | Doc | What's in it |
 |-----|-------------|
