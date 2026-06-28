@@ -1,0 +1,15 @@
+sequenceDiagram
+  participant U as User (Browser)
+  participant F as Frontend (Next.js)
+  participant B as Backend (Go API)
+  participant D as Database (Supabase/Postgres)
+  participant A as AI Service (Python)
+
+  U->>F: POST /trips (create)
+  F->>B: POST /api/v1/trips
+  B->>D: INSERT trip
+  B-->>F: 201 Created
+  F->>A: (optional) POST /ai/recommendations for itinerary suggestions
+  A->>B: (via proxy) save recommendations or read user data
+  A-->>F: recommendations
+  F-->>U: render trip + AI suggestions

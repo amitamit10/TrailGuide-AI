@@ -1,0 +1,19 @@
+flowchart LR
+  Frontend[Frontend]
+  Backend[Backend API]
+  Database[Database]
+  AI[AI Service]
+  External[External APIs]
+  Docker[Docker Compose]
+  Vercel[Vercel]
+
+  Frontend -->|API| Backend
+  Backend -->|SQL| Database
+  Backend -->|Proxy| AI
+  AI -->|Reads/Writes| Database
+  Frontend -->|Direct AI| AI
+  External --> AI
+  External --> Backend
+  Docker --- Backend
+  Docker --- AI
+  Vercel --- Frontend
