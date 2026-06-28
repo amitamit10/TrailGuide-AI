@@ -27,7 +27,7 @@ When the trip is done: AI writes a short travel story, you export to PDF or cale
 
 ## AI
 
-Built with [Groq](https://console.groq.com) — all LLM calls go through Groq's API.
+Built with [Claude Code](https://claude.ai/code) (Anthropic's AI coding assistant) and [Groq](https://console.groq.com) for all LLM calls at runtime.
 
 - `llama-3.3-70b-versatile` — itinerary generation, editing, recommendations, culture packs, packing lists, trip stories
 - `llama-3.1-8b-instant` — photo captions, companion nudges (faster, cheaper)
