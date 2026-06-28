@@ -50,6 +50,12 @@ func main() {
 	v1.PUT("/trips/:id", trips.Update)
 	v1.DELETE("/trips/:id", trips.Delete)
 
+	// Trip member management (invite, list, remove)
+	members := &handlers.MembersHandler{DB: pool}
+	v1.GET("/trips/:tripId/members", members.List)
+	v1.POST("/trips/:tripId/members", members.Invite)
+	v1.DELETE("/trips/:tripId/members/:userId", members.Remove)
+
 	// AI + utility routes (proxied to Python AI service)
 	proxy := handlers.NewAIProxyHandler(cfg.AIServiceURL, cfg.InternalAPISecret)
 	v1.Any("/ai/*path", proxy.ProxyAI)
