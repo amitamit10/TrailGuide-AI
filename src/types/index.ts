@@ -160,3 +160,15 @@ export interface ExtractedDocumentData {
   check_out?: string;
   confirmation_number?: string;
 }
+
+export interface TripMember {
+  id: string;
+  trip_id: string;
+  user_id: string | null;
+  role: "owner" | "editor" | "viewer";
+  invited_by: string | null;
+  invited_email: string | null;
+  accepted_at: string | null;
+  created_at: string;
+  profiles?: { full_name: string | null; avatar_url: string | null };
+}
