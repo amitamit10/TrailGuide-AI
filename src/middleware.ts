@@ -41,7 +41,16 @@ export async function middleware(request: NextRequest) {
     request.nextUrl.pathname.startsWith("/api/cron/") ||
     request.nextUrl.pathname === "/api/telegram/webhook";
 
-  if (!user && !isAuthRoute && !isPublicRoute && !isServiceRoute) {
+  // Public, unauthenticated API routes. These are reached by logged-out
+  // visitors on /share/[tripId] pages, so a session-based redirect here would
+  // break every image and widget on a shared trip. Each one guards itself with
+  // publicRatelimit (30/min per IP) instead of a session check.
+  const isPublicApiRoute =
+    request.nextUrl.pathname === "/api/places/photo" ||
+    request.nextUrl.pathname === "/api/weather" ||
+    request.nextUrl.pathname === "/api/visa";
+
+  if (!user && !isAuthRoute && !isPublicRoute && !isServiceRoute && !isPublicApiRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
