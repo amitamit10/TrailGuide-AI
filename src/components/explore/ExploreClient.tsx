@@ -11,8 +11,8 @@ interface PublicTrip {
   destination: string;
   start_date: string;
   end_date: string;
-  travelers: number;
-  trip_style: string;
+  travelers_count: number;
+  travel_style: string;
   interests: string[];
 }
 
@@ -80,7 +80,7 @@ export function ExploreClient({ trips }: { trips: PublicTrip[] }) {
                     </div>
                   </div>
                   <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full capitalize flex-shrink-0">
-                    {trip.trip_style}
+                    {trip.travel_style}
                   </span>
                 </div>
 
@@ -91,7 +91,7 @@ export function ExploreClient({ trips }: { trips: PublicTrip[] }) {
                   </span>
                   <span className="flex items-center gap-1">
                     <Users className="w-3 h-3" />
-                    {trip.travelers} traveler{trip.travelers !== 1 ? "s" : ""}
+                    {trip.travelers_count} traveler{trip.travelers_count !== 1 ? "s" : ""}
                   </span>
                 </div>
 

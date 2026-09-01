@@ -32,7 +32,9 @@ export async function middleware(request: NextRequest) {
     request.nextUrl.pathname.startsWith("/auth");
 
   const isPublicRoute = request.nextUrl.pathname === "/" ||
-    request.nextUrl.pathname.startsWith("/share/");
+    request.nextUrl.pathname.startsWith("/share/") ||
+    request.nextUrl.pathname === "/explore" ||
+    request.nextUrl.pathname === "/offline";
 
   // These API routes use their own auth (CRON_SECRET / Telegram webhook secret).
   // They are called by external systems (Vercel Cron, Telegram) without a user
