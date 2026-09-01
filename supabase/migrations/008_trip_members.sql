@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS trip_members (
 ALTER TABLE trip_members ENABLE ROW LEVEL SECURITY;
 
 -- Trip owner can see all members of their trips
+DROP POLICY IF EXISTS "trip_members_select" ON trip_members;
 CREATE POLICY "trip_members_select" ON trip_members
   FOR SELECT USING (
     trip_id IN (SELECT id FROM trips WHERE user_id = auth.uid())
@@ -21,12 +22,14 @@ CREATE POLICY "trip_members_select" ON trip_members
   );
 
 -- Only trip owner can insert (invite)
+DROP POLICY IF EXISTS "trip_members_insert" ON trip_members;
 CREATE POLICY "trip_members_insert" ON trip_members
   FOR INSERT WITH CHECK (
     trip_id IN (SELECT id FROM trips WHERE user_id = auth.uid())
   );
 
 -- Owner can delete any member; member can remove themselves
+DROP POLICY IF EXISTS "trip_members_delete" ON trip_members;
 CREATE POLICY "trip_members_delete" ON trip_members
   FOR DELETE USING (
     trip_id IN (SELECT id FROM trips WHERE user_id = auth.uid())
