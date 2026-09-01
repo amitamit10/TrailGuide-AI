@@ -3,14 +3,46 @@ import "./globals.css";
 import "leaflet/dist/leaflet.css";
 
 export const metadata: Metadata = {
-  title: "TrailGuide AI — Your Personal AI Travel Planner",
+  metadataBase: new URL("https://trailguide-ai-iota.vercel.app"),
+  title: {
+    default: "TrailGuide AI — Your Personal AI Travel Planner",
+    template: "%s | TrailGuide AI",
+  },
   description:
-    "Plan your entire vacation with AI and get guided throughout your trip",
+    "Plan your entire vacation in seconds with AI. Get customized day-by-day itineraries, interactive maps, packing lists, expense tracking, and real-time live travel companion guidance.",
+  applicationName: "TrailGuide AI",
+  keywords: [
+    "AI travel planner",
+    "trip itinerary generator",
+    "vacation planner",
+    "travel guide",
+    "packing checklist",
+    "travel budget tracker",
+  ],
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
     title: "TrailGuide AI",
+  },
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://trailguide-ai-iota.vercel.app",
+    siteName: "TrailGuide AI",
+    title: "TrailGuide AI — Your Personal AI Travel Planner",
+    description:
+      "Plan your entire vacation in seconds with AI. Day-by-day itineraries, interactive maps, packing lists, and live travel companion.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "TrailGuide AI — Your Personal AI Travel Planner",
+    description:
+      "Plan your entire vacation in seconds with AI. Day-by-day itineraries, interactive maps, packing lists, and live travel companion.",
+  },
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/icons/apple-touch-icon.png",
   },
 };
 
