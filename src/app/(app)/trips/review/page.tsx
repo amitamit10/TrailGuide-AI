@@ -5,6 +5,7 @@ import {
   Loader2, ArrowLeft, MapPin, Calendar, Users, Check,
   X, Clock, DollarSign, ArrowRight, Sparkles, ExternalLink,
   UtensilsCrossed, Landmark, Bus, Hotel, Plane, Leaf,
+  Compass, Coins,
 } from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
@@ -51,12 +52,12 @@ const CATEGORY_META = {
 };
 
 const SUGGESTIONS = [
-  { label: "Something more adventurous", emoji: "🧗" },
-  { label: "A hidden gem instead",       emoji: "💎" },
-  { label: "Better food option",         emoji: "🍜" },
-  { label: "More budget-friendly",       emoji: "💰" },
-  { label: "Historical site nearby",     emoji: "🏛️" },
-  { label: "Free time / relax",          emoji: "🌿" },
+  { label: "Something more adventurous", icon: Compass },
+  { label: "A hidden gem instead",       icon: Sparkles },
+  { label: "Better food option",         icon: UtensilsCrossed },
+  { label: "More budget-friendly",       icon: Coins },
+  { label: "Historical site nearby",     icon: Landmark },
+  { label: "Free time / relax",          icon: Leaf },
 ];
 
 interface Selected {
@@ -466,7 +467,8 @@ function ActivitySheet({ selected, config, itinerary, onClose, onReplace }: {
                         disabled={loading}
                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-card border border-border text-sm font-medium hover:border-primary/50 hover:bg-primary/5 hover:text-primary transition-all disabled:opacity-40 active:scale-95"
                       >
-                        <span>{s.emoji}</span> {s.label}
+                        <s.icon className="w-3.5 h-3.5 text-primary" />
+                        <span>{s.label}</span>
                       </button>
                     ))}
                   </div>

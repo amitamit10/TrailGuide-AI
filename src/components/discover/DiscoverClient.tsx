@@ -11,10 +11,10 @@ import type { Recommendation } from "@/app/api/ai/recommendations/route";
 import { PhotoLightbox } from "@/components/ui/PhotoLightbox";
 
 const CATEGORIES = [
-  { id: "",           label: "All",         emoji: "✨" },
-  { id: "attraction", label: "Attractions", emoji: "🏛️" },
-  { id: "food",       label: "Food",        emoji: "🍜" },
-  { id: "free",       label: "Free",        emoji: "🌿" },
+  { id: "",           label: "All",         icon: Sparkles },
+  { id: "attraction", label: "Attractions", icon: Landmark },
+  { id: "food",       label: "Food",        icon: UtensilsCrossed },
+  { id: "free",       label: "Free",        icon: Leaf },
 ];
 
 const CAT_META = {
@@ -141,7 +141,8 @@ export function DiscoverClient({ tripId, destination, interests, travelStyle, ex
                   : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground"
               }`}
             >
-              <span>{c.emoji}</span> {c.label}
+              <c.icon className="w-3.5 h-3.5" />
+              <span>{c.label}</span>
             </button>
           ))}
         </div>

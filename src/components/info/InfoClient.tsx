@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, CheckCircle2, XCircle } from "lucide-react";
 
 interface Phrase {
   phrase: string;
@@ -173,10 +173,15 @@ export function InfoClient({ tripId }: { tripId: string }) {
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
               Do &amp; Don&apos;t
             </p>
-            <ul className="space-y-1">
+            <ul className="space-y-2">
               {pack.customs.etiquette.map((e, i) => (
-                <li key={i} className="text-sm flex gap-2">
-                  {i % 2 === 0 ? "✅" : "❌"} {e}
+                <li key={i} className="text-sm flex items-start gap-2">
+                  {i % 2 === 0 ? (
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                  ) : (
+                    <XCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+                  )}
+                  <span>{e}</span>
                 </li>
               ))}
             </ul>

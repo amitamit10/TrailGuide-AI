@@ -1,7 +1,12 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Check, MapPin, Sparkles, Calendar, Users, Wallet, Zap, Car } from "lucide-react";
+import {
+  ArrowLeft, ArrowRight, Check, MapPin, Sparkles, Calendar, Users, Wallet,
+  Zap, Car, UtensilsCrossed, Landmark, Palette, Trees, PartyPopper, ShoppingBag,
+  Compass, Building2, Coffee, Scale, Backpack, Plane, Building, Crown, Waves,
+  Footprints, Bus, Bike, Shuffle, Clock, Heart, Timer, User, type LucideIcon
+} from "lucide-react";
 import Link from "next/link";
 import type { TripConfig } from "@/types";
 
@@ -18,46 +23,46 @@ const DESTINATIONS = [
 ];
 
 const INTERESTS = [
-  { label: "Food & Dining",     emoji: "🍜" },
-  { label: "History & Culture", emoji: "🏛️" },
-  { label: "Art & Museums",     emoji: "🎨" },
-  { label: "Nature & Outdoors", emoji: "🌿" },
-  { label: "Nightlife",         emoji: "🎉" },
-  { label: "Shopping",          emoji: "🛍️" },
-  { label: "Adventure Sports",  emoji: "🧗" },
-  { label: "Local Experiences", emoji: "🏘️" },
-  { label: "Hidden Gems",       emoji: "💎" },
+  { label: "Food & Dining",     icon: UtensilsCrossed },
+  { label: "History & Culture", icon: Landmark },
+  { label: "Art & Museums",     icon: Palette },
+  { label: "Nature & Outdoors", icon: Trees },
+  { label: "Nightlife",         icon: PartyPopper },
+  { label: "Shopping",          icon: ShoppingBag },
+  { label: "Adventure Sports",  icon: Compass },
+  { label: "Local Experiences", icon: Building2 },
+  { label: "Hidden Gems",       icon: Sparkles },
 ];
 
 const STYLES = [
-  { id: "relaxed", label: "Relaxed",  desc: "Slow pace, deep dives",  emoji: "🌿" },
-  { id: "balanced", label: "Balanced", desc: "Best of both worlds",    emoji: "⚖️" },
-  { id: "packed",   label: "Packed",   desc: "See everything!",        emoji: "⚡" },
+  { id: "relaxed", label: "Relaxed",  desc: "Slow pace, deep dives",  icon: Coffee },
+  { id: "balanced", label: "Balanced", desc: "Best of both worlds",    icon: Scale },
+  { id: "packed",   label: "Packed",   desc: "See everything!",        icon: Zap },
 ] as const;
 
 const BUDGETS = [
-  { label: "Budget",   sub: "Under $1,000",  emoji: "🎒", value: "800"  },
-  { label: "Mid",      sub: "$1k – $3k",     emoji: "✈️",  value: "2000" },
-  { label: "Comfort",  sub: "$3k – $6k",     emoji: "🏨", value: "4500" },
-  { label: "Luxury",   sub: "$6,000+",       emoji: "💎", value: "8000" },
-  { label: "Flexible", sub: "No limit set",  emoji: "🌊", value: ""     },
+  { label: "Budget",   sub: "Under $1,000",  icon: Backpack, value: "800"  },
+  { label: "Mid",      sub: "$1k – $3k",     icon: Plane,    value: "2000" },
+  { label: "Comfort",  sub: "$3k – $6k",     icon: Building, value: "4500" },
+  { label: "Luxury",   sub: "$6,000+",       icon: Crown,    value: "8000" },
+  { label: "Flexible", sub: "No limit set",  icon: Waves,    value: ""     },
 ];
 
 const TRANSPORT_MODES = [
-  { id: "walking", label: "Walking",        desc: "We'll keep activities nearby",      emoji: "🚶" },
-  { id: "transit", label: "Public Transit", desc: "Bus, metro, subway",                emoji: "🚌" },
-  { id: "car",     label: "Car / Taxi",     desc: "Maximum flexibility",               emoji: "🚗" },
-  { id: "bicycle", label: "Bicycle",        desc: "Eco-friendly, medium range",        emoji: "🚴" },
-  { id: "mix",     label: "Mix it up",      desc: "Best mode for each route",          emoji: "🔀" },
+  { id: "walking", label: "Walking",        desc: "We'll keep activities nearby",      icon: Footprints },
+  { id: "transit", label: "Public Transit", desc: "Bus, metro, subway",                icon: Bus },
+  { id: "car",     label: "Car / Taxi",     desc: "Maximum flexibility",               icon: Car },
+  { id: "bicycle", label: "Bicycle",        desc: "Eco-friendly, medium range",        icon: Bike },
+  { id: "mix",     label: "Mix it up",      desc: "Best mode for each route",          icon: Shuffle },
 ] as const;
 
 const WALK_LIMITS = [5, 10, 15, 20, 30];
 
 const BREAK_OPTIONS = [
-  { value: 0,  label: "Back-to-back", sub: "No breaks",       emoji: "⚡" },
-  { value: 15, label: "Short break",  sub: "15 min between",  emoji: "☕" },
-  { value: 30, label: "Regular",      sub: "30 min to breathe", emoji: "🌿" },
-  { value: 60, label: "Relaxed",      sub: "1 hr buffer",     emoji: "🍽️" },
+  { value: 0,  label: "Back-to-back", sub: "No breaks",       icon: Zap },
+  { value: 15, label: "Short break",  sub: "15 min between",  icon: Coffee },
+  { value: 30, label: "Regular",      sub: "30 min to breathe", icon: Clock },
+  { value: 60, label: "Relaxed",      sub: "1 hr buffer",     icon: UtensilsCrossed },
 ];
 
 const STEPS = [
@@ -468,10 +473,10 @@ function TravelersStep({ count, onChange, onNext, onBack }: {
   onNext: () => void; onBack: () => void;
 }) {
   const desc =
-    count === 1 ? "Solo trip 🧳" :
-    count === 2 ? "Just the two of you 💑" :
-    count <= 4  ? "Small group 👫" :
-                  "Big crew! 🎉";
+    count === 1 ? "Solo traveler" :
+    count === 2 ? "Couple getaway" :
+    count <= 4  ? "Small group trip" :
+                  "Large group adventure";
 
   return (
     <div className="flex flex-col gap-5">
@@ -502,13 +507,15 @@ function TravelersStep({ count, onChange, onNext, onBack }: {
           </button>
         </div>
         <div className="text-center">
-          <div className="flex gap-1 justify-center flex-wrap">
+          <div className="flex gap-1.5 justify-center flex-wrap">
             {Array.from({ length: Math.min(count, 10) }).map((_, i) => (
-              <span key={i} className="text-xl">🧑</span>
+              <div key={i} className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                <User className="w-4 h-4" />
+              </div>
             ))}
-            {count > 10 && <span className="text-sm text-muted-foreground self-center">+{count - 10}</span>}
+            {count > 10 && <span className="text-sm font-medium text-muted-foreground self-center">+{count - 10}</span>}
           </div>
-          <p className="text-sm text-muted-foreground mt-2">{desc}</p>
+          <p className="text-sm font-medium text-primary mt-3">{desc}</p>
         </div>
       </div>
 
@@ -546,7 +553,11 @@ function StyleStep({ selected, onSelect, onNext, onBack }: {
                   : "bg-card border-border hover:border-primary/40 hover:bg-primary/5"
               }`}
             >
-              <span className="text-3xl leading-none">{s.emoji}</span>
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                on ? "bg-primary text-white" : "bg-primary/10 text-primary"
+              }`}>
+                <s.icon className="w-5 h-5" />
+              </div>
               <div className="flex-1">
                 <div className={`font-semibold ${on ? "text-primary" : "text-foreground"}`}>{s.label}</div>
                 <div className={`text-sm ${on ? "text-primary/70" : "text-muted-foreground"}`}>{s.desc}</div>
@@ -599,7 +610,11 @@ function InterestsStep({ selected, onToggle, onNext, onBack }: {
                   <Check className="w-2.5 h-2.5 text-white" />
                 </div>
               )}
-              <span className="text-2xl leading-none">{i.emoji}</span>
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                on ? "bg-primary text-white" : "bg-primary/10 text-primary"
+              }`}>
+                <i.icon className="w-4 h-4" />
+              </div>
               <span className={`text-[11px] font-medium leading-tight ${on ? "text-primary" : "text-foreground"}`}>
                 {i.label}
               </span>
@@ -650,7 +665,11 @@ function BudgetStep({ selected, onSelect, onNext, onBack }: {
                   : "bg-card border-border hover:border-primary/40 hover:bg-primary/5"
               }`}
             >
-              <span className="text-2xl leading-none">{b.emoji}</span>
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                on ? "bg-primary text-white" : "bg-primary/10 text-primary"
+              }`}>
+                <b.icon className="w-5 h-5" />
+              </div>
               <div className="flex-1">
                 <div className={`font-semibold ${on ? "text-primary" : "text-foreground"}`}>{b.label}</div>
                 <div className={`text-sm ${on ? "text-primary/70" : "text-muted-foreground"}`}>{b.sub}</div>
@@ -700,7 +719,11 @@ function TransportStep({ mode, onMode, maxWalk, onMaxWalk, breakMins, onBreak, o
                 on ? "bg-primary/10 border-primary shadow-sm" : "bg-card border-border hover:border-primary/40 hover:bg-primary/5"
               }`}
             >
-              <span className="text-2xl leading-none">{t.emoji}</span>
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                on ? "bg-primary text-white" : "bg-primary/10 text-primary"
+              }`}>
+                <t.icon className="w-5 h-5" />
+              </div>
               <div className="flex-1">
                 <div className={`font-semibold text-sm ${on ? "text-primary" : "text-foreground"}`}>{t.label}</div>
                 <div className={`text-xs ${on ? "text-primary/70" : "text-muted-foreground"}`}>{t.desc}</div>
@@ -751,7 +774,11 @@ function TransportStep({ mode, onMode, maxWalk, onMaxWalk, breakMins, onBreak, o
                   on ? "bg-primary/10 border-primary shadow-sm" : "bg-card border-border hover:border-primary/40 hover:bg-primary/5"
                 }`}
               >
-                <span className="text-xl leading-none">{b.emoji}</span>
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                  on ? "bg-primary text-white" : "bg-primary/10 text-primary"
+                }`}>
+                  <b.icon className="w-4 h-4" />
+                </div>
                 <div>
                   <div className={`font-semibold text-xs ${on ? "text-primary" : "text-foreground"}`}>{b.label}</div>
                   <div className={`text-[11px] ${on ? "text-primary/70" : "text-muted-foreground"}`}>{b.sub}</div>
@@ -811,24 +838,24 @@ function ReviewStep({ dest, dates, travelers, style, interests, transport, break
         </div>
       ) : (
         <div className="flex flex-col gap-2.5">
-          <SummaryRow icon="📍" label="Destination" value={dest} />
-          <SummaryRow icon="📅" label="Dates" value={`${formatDate(dates.start)} – ${formatDate(dates.end)}`} sub={`${nights} nights`} />
-          <SummaryRow icon="👥" label="Travelers" value={`${travelers} ${travelers === 1 ? "person" : "people"}`} />
-          <SummaryRow icon="⚡" label="Style" value={style ? style.charAt(0).toUpperCase() + style.slice(1) : "Balanced"} />
+          <SummaryRow icon={MapPin} label="Destination" value={dest} />
+          <SummaryRow icon={Calendar} label="Dates" value={`${formatDate(dates.start)} – ${formatDate(dates.end)}`} sub={`${nights} nights`} />
+          <SummaryRow icon={Users} label="Travelers" value={`${travelers} ${travelers === 1 ? "person" : "people"}`} />
+          <SummaryRow icon={Zap} label="Style" value={style ? style.charAt(0).toUpperCase() + style.slice(1) : "Balanced"} />
           <SummaryRow
-            icon="❤️" label="Interests"
+            icon={Heart} label="Interests"
             value={interests.slice(0, 3).join(", ")}
             sub={interests.length > 3 ? `+${interests.length - 3} more` : undefined}
           />
           {transport && (
             <SummaryRow
-              icon={TRANSPORT_MODES.find(t => t.id === transport)?.emoji ?? "🚶"}
+              icon={TRANSPORT_MODES.find(t => t.id === transport)?.icon ?? Footprints}
               label="Getting Around"
               value={TRANSPORT_MODES.find(t => t.id === transport)?.label ?? transport}
             />
           )}
           <SummaryRow
-            icon="⏱️" label="Breaks"
+            icon={Timer} label="Breaks"
             value={BREAK_OPTIONS.find(b => b.value === breakMins)?.label ?? "Regular"}
             sub={breakMins === 0 ? "Back-to-back activities" : `${breakMins} min between activities`}
           />
@@ -858,10 +885,12 @@ function ReviewStep({ dest, dates, travelers, style, interests, transport, break
 }
 
 /* ── Shared pieces ── */
-function SummaryRow({ icon, label, value, sub }: { icon: string; label: string; value: string; sub?: string }) {
+function SummaryRow({ icon: Icon, label, value, sub }: { icon: LucideIcon; label: string; value: string; sub?: string }) {
   return (
     <div className="flex items-center gap-3 bg-card border border-border rounded-xl px-4 py-3">
-      <span className="text-xl leading-none">{icon}</span>
+      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
+        <Icon className="w-4 h-4" />
+      </div>
       <div className="flex-1 min-w-0">
         <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">{label}</p>
         <p className="text-sm font-semibold text-foreground truncate">{value}</p>

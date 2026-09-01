@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { ArrowLeft, Check, Send, User, Mail, Loader2 } from "lucide-react";
+import { ArrowLeft, Check, Send, User, Mail, Loader2, Calendar, Bot, CloudSun, PlaneTakeoff } from "lucide-react";
 import Link from "next/link";
 
 interface Props {
@@ -140,13 +140,15 @@ export function SettingsClient({ email, fullName, telegramLinked, botUsername }:
           </div>
           <div className="divide-y divide-border">
             {[
-              { emoji: "⏰", label: "Daily itinerary", desc: "Morning summary of today's activities" },
-              { emoji: "🤖", label: "AI nudges",        desc: "Real-time tips while you travel" },
-              { emoji: "🌦️", label: "Weather alerts",   desc: "Rain or weather changes ahead" },
-              { emoji: "✈️", label: "Trip reminders",   desc: "24h and day-of departure alerts" },
+              { icon: Calendar, label: "Daily itinerary", desc: "Morning summary of today's activities" },
+              { icon: Bot, label: "AI nudges",        desc: "Real-time tips while you travel" },
+              { icon: CloudSun, label: "Weather alerts",   desc: "Rain or weather changes ahead" },
+              { icon: PlaneTakeoff, label: "Trip reminders",   desc: "24h and day-of departure alerts" },
             ].map((item) => (
               <div key={item.label} className="flex items-center gap-3 px-4 py-3">
-                <span className="text-lg leading-none">{item.emoji}</span>
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                  <item.icon className="w-4 h-4" />
+                </div>
                 <div>
                   <p className="text-sm font-medium text-foreground">{item.label}</p>
                   <p className="text-xs text-muted-foreground">{item.desc}</p>
