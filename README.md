@@ -74,7 +74,7 @@ cd ai-service && python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt && uvicorn main:app --port 8081 --reload
 ```
 
-Run the Supabase migrations in order (`supabase/migrations/001` through `007`) and create an `activity-photos` storage bucket (public).
+Run the Supabase migrations (`supabase/BOOTSTRAP.sql` or `001` through `008`) and create an `activity-photos` storage bucket (public).
 
 See [`docs/env-vars.md`](docs/env-vars.md) for all the environment variables.
 
